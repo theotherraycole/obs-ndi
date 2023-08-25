@@ -526,8 +526,8 @@ void ndi_source_update(void *data, obs_data_t *settings)
 	s->yuv_colorspace = prop_to_colorspace(
 		(int)obs_data_get_int(settings, PROP_YUV_COLORSPACE));
 
-	const bool is_unbuffered =
-		(obs_data_get_int(settings, PROP_LATENCY) == PROP_LATENCY_LOW);
+	const bool is_unbuffered = false;
+		//(obs_data_get_int(settings, PROP_LATENCY) == PROP_LATENCY_LOW);
 	obs_source_set_async_unbuffered(s->source, is_unbuffered);
 
 	s->audio_enabled = obs_data_get_bool(settings, PROP_AUDIO);
