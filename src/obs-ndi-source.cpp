@@ -97,6 +97,10 @@ typedef struct {
 
 	bool running;
 	pthread_t av_thread;
+
+	float   pulse;
+	os_sem_t *pSem;
+
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -386,6 +390,18 @@ void ndi_source_thread_process_video2(ndi_source_config_t *config,
 				      obs_source *obs_source,
 				      obs_source_frame *obs_video_frame);
 
+void ndi_source_tick(void *data, float aSecs)
+{
+
+auto s = (struct ndi_source *)data;
+
+if (s->pulse != aSecs)
+    s->pulse = aSecs;
+
+if (s->pSem != NULL)
+    os_sem_post(s->pSem);
+}
+
 void *ndi_source_thread(void *data)
 {
 	auto s = (ndi_source_t *)data;
@@ -656,6 +672,9 @@ void *ndi_source_thread(void *data)
 					       &config_most_recent.tally);
 		}
 
+		if (s->pSem != NULL)
+	              os_sem_wait(s->pSem);
+	
 		if (ndi_frame_sync) {
 			//
 			// AUDIO
@@ -694,10 +713,7 @@ void *ndi_source_thread(void *data)
 			}
 			ndiLib->framesync_free_video(ndi_frame_sync,
 						     &video_frame2);
-
-			// TODO: More accurate sleep that subtracts the duration of this loop iteration?
-			std::this_thread::sleep_for(
-				std::chrono::milliseconds(5));
+			
 		} else {
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
@@ -896,7 +912,9 @@ void ndi_source_thread_stop(ndi_source_t *s)
 {
 	if (s->running) {
 		s->running = false;
+  		if (s->pSem != NULL) os_sem_post(s->pSem);
 		pthread_join(s->av_thread, NULL);
+		if (s-
 	}
 }
 
@@ -909,6 +927,9 @@ void ndi_source_update(void *data, obs_data_t *settings)
 
 	ndi_source_config_t config = s->config;
 
+	if (s->pSem != NULL)
+		s->pSem = NULL;
+		
 	config.ndi_source_name = obs_data_get_string(settings, PROP_SOURCE);
 	config.bandwidth = (int)obs_data_get_int(settings, PROP_BANDWIDTH);
 
@@ -922,6 +943,9 @@ void ndi_source_update(void *data, obs_data_t *settings)
 	}
 
 	config.framesync_enabled = obs_data_get_bool(settings, PROP_FRAMESYNC);
+
+	if (config.framesync_enabled)
+               os_sem_init(&s->pSem, 0);
 
 	config.hw_accel_enabled = obs_data_get_bool(settings, PROP_HW_ACCEL);
 
@@ -1078,6 +1102,8 @@ obs_source_info create_ndi_source_info()
 	ndi_source_info.hide = ndi_source_hidden;
 	ndi_source_info.deactivate = ndi_source_deactivated;
 	ndi_source_info.destroy = ndi_source_destroy;
+        ndi_source_info.video_tick = ndi_source_tick; 
+
 
 	return ndi_source_info;
 }
