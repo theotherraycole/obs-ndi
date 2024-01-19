@@ -736,6 +736,10 @@ void *ndi_source_thread(void *data)
 					obs_source, &obs_video_frame);
 				ndiLib->recv_free_video_v2(ndi_receiver,
 							   &video_frame2);
+
+			if (s->pSem != NULL)
+	              	   os_sem_wait(s->pSem);
+			
 				continue;
 			}
 		}
