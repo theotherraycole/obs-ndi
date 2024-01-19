@@ -710,11 +710,11 @@ void *ndi_source_thread(void *data)
 					obs_source, &obs_video_frame);
 			}
 			
-			ndiLib->framesync_free_video(ndi_frame_sync,
-						     &video_frame2);
-
 			if (s->pSem != NULL)
 	              	   os_sem_wait(s->pSem);
+			
+			ndiLib->framesync_free_video(ndi_frame_sync,
+						     &video_frame2);
 			
 		} else {
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
@@ -735,12 +735,13 @@ void *ndi_source_thread(void *data)
 				ndi_source_thread_process_video2(
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
-				ndiLib->recv_free_video_v2(ndi_receiver,
-							   &video_frame2);
 
 				if (s->pSem != NULL)
 	              		   os_sem_wait(s->pSem);
-			
+				
+				ndiLib->recv_free_video_v2(ndi_receiver,
+							   &video_frame2);
+	
 				continue;
 			}
 			else {
