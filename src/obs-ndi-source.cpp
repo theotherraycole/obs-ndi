@@ -671,11 +671,12 @@ void *ndi_source_thread(void *data)
 			ndiLib->recv_set_tally(ndi_receiver,
 					       &config_most_recent.tally);
 		}
-
-		if (s->pSem != NULL)
-	              os_sem_wait(s->pSem);
 	
 		if (ndi_frame_sync) {
+
+			if (s->pSem != NULL)
+	              	   os_sem_wait(s->pSem);
+			
 			//
 			// AUDIO
 			//
