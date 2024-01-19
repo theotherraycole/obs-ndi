@@ -719,7 +719,7 @@ void *ndi_source_thread(void *data)
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
 								 &audio_frame3,
-								 nullptr, 100);
+								 nullptr, (int) (1 / s->pulse) * 1000);
 
 			if (frame_received == NDIlib_frame_type_audio) {
 				ndi_source_thread_process_audio3(
@@ -737,10 +737,14 @@ void *ndi_source_thread(void *data)
 				ndiLib->recv_free_video_v2(ndi_receiver,
 							   &video_frame2);
 
-			if (s->pSem != NULL)
-	              	   os_sem_wait(s->pSem);
+				if (s->pSem != NULL)
+	              		   os_sem_wait(s->pSem);
 			
 				continue;
+			}
+			else {
+				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
+	     				obs_source_ndi_receiver_name);
 			}
 		}
 	}
