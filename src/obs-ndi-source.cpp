@@ -914,7 +914,7 @@ void ndi_source_thread_stop(ndi_source_t *s)
 		s->running = false;
   		if (s->pSem != NULL) os_sem_post(s->pSem);
 		pthread_join(s->av_thread, NULL);
-		if (s-
+		s->pSem = NULL;
 	}
 }
 
