@@ -709,6 +709,13 @@ void *ndi_source_thread(void *data)
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
 			}
+			else
+			{
+				blog(LOG_INFO,
+				     "[obs-ndi] ndi_source_thread: No new frame was available",
+				     obs_source_ndi_receiver_name);
+
+			}
 			
 			if (s->pSem != NULL)
 	              	   os_sem_wait(s->pSem);
