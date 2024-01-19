@@ -405,8 +405,7 @@ if (s->pulseSem != NULL)
     }
     else
     {
-	blog(LOG_INFO, "[obs-ndi] ndi_source_thread '%s' - tick with no data.",
-	     obs_source_ndi_receiver_name);
+	blog(LOG_INFO, "[obs-ndi] ndi_source_tick- tick with no data.");
     }
 		
 }
