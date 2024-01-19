@@ -712,7 +712,7 @@ void *ndi_source_thread(void *data)
 			else
 			{
 				blog(LOG_INFO,
-				     "[obs-ndi] ndi_source_thread: No new frame was available",
+				     "[obs-ndi] ndi_source_thread: %s No new frame was available",
 				     obs_source_ndi_receiver_name);
 
 			}
