@@ -701,8 +701,8 @@ void *ndi_source_thread(void *data)
 			ndiLib->framesync_capture_video(
 				ndi_frame_sync, &video_frame2,
 				NDIlib_frame_format_type_progressive);
-			if (video_frame2.p_data &&
-			    (video_frame2.timestamp > timestamp_video)) {
+			if (video_frame2.p_data) { // &&
+			    //(video_frame2.timestamp > timestamp_video)) {
 				//blog(LOG_INFO, "v");//ideo_frame";
 				timestamp_video = video_frame2.timestamp;
 				ndi_source_thread_process_video2(
