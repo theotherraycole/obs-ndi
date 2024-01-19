@@ -99,7 +99,8 @@ typedef struct {
 	pthread_t av_thread;
 
 	float   pulse;
-	os_sem_t *pSem;
+	boolean   pulseFlag;
+	os_sem_t *pulseSem;
 
 } ndi_source_t;
 
@@ -398,8 +399,13 @@ auto s = (ndi_source_t *)data;
 if (s->pulse != aSecs)
     s->pulse = aSecs;
 
-if (s->pSem != NULL)
-    os_sem_post(s->pSem);
+if (s->pulseSem != NULL &&
+    s->pulseFlag)
+{
+    s->pulseFlag = false;
+    os_sem_post(s->pulseSem);
+}
+	
 }
 
 void *ndi_source_thread(void *data)
@@ -717,8 +723,11 @@ void *ndi_source_thread(void *data)
 
 			}
 			
-			if (s->pSem != NULL)
-	              	   os_sem_wait(s->pSem);
+			if (s->pulseSem != NULL)
+			{
+			   s->pulseFlag = true;
+	              	   os_sem_wait(s->pulseSem);
+			};
 			
 			ndiLib->framesync_free_video(ndi_frame_sync,
 						     &video_frame2);
@@ -743,8 +752,11 @@ void *ndi_source_thread(void *data)
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
 
-				if (s->pSem != NULL)
-	              		   os_sem_wait(s->pSem);
+				if (s->pulseSem != NULL)
+				{
+			   		s->pulseFlag = true;
+	              	   		os_sem_wait(s->pulseSem);
+				};	
 				
 				ndiLib->recv_free_video_v2(ndi_receiver,
 							   &video_frame2);
@@ -918,10 +930,8 @@ void ndi_source_thread_process_video2(ndi_source_config_t *config,
 
 void ndi_source_thread_start(ndi_source_t *s)
 {
-	
-	if (s->pSem != NULL) os_sem_post(s->pSem);
-	
-        os_sem_init(&s->pSem, 0);
+	s->pulseFlag = false;
+        os_sem_init(&s->pulseSem, 0);
 	
 	s->running = true;
 	pthread_create(&s->av_thread, nullptr, ndi_source_thread, s);
@@ -935,9 +945,10 @@ void ndi_source_thread_stop(ndi_source_t *s)
 {
 	if (s->running) {
 		s->running = false;
-  		if (s->pSem != NULL) os_sem_post(s->pSem);
+  		if (s->pulseSem != NULL) os_sem_post(s->pulseSem);
 		pthread_join(s->av_thread, NULL);
-		s->pSem = NULL;
+		if (s->pulseSem != NULL) os_sem_destroy(s->pulseSem);
+		s->pulseSem = NULL;
 	}
 }
 
