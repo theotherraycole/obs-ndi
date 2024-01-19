@@ -673,9 +673,6 @@ void *ndi_source_thread(void *data)
 		}
 	
 		if (ndi_frame_sync) {
-
-			if (s->pSem != NULL)
-	              	   os_sem_wait(s->pSem);
 			
 			//
 			// AUDIO
@@ -712,8 +709,12 @@ void *ndi_source_thread(void *data)
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
 			}
+			
 			ndiLib->framesync_free_video(ndi_frame_sync,
 						     &video_frame2);
+
+			if (s->pSem != NULL)
+	              	   os_sem_wait(s->pSem);
 			
 		} else {
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
