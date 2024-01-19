@@ -402,12 +402,7 @@ if (s->pulseSem != NULL)
     {
     	s->pulseFlag = false;
     	os_sem_post(s->pulseSem);
-    }
-    else
-    {
-	blog(LOG_INFO, "[obs-ndi] ndi_source_tick- tick with no data.");
-    }
-		
+    }	
 }
 
 }
@@ -756,11 +751,11 @@ void *ndi_source_thread(void *data)
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
 
-				if (s->pulseSem != NULL)
-				{
-			   		s->pulseFlag = true;
-	              	   		os_sem_wait(s->pulseSem);
-				};	
+				//if (s->pulseSem != NULL)
+				//{
+			   	//	s->pulseFlag = true;
+	              	   	//	os_sem_wait(s->pulseSem);
+				//};	
 				
 				ndiLib->recv_free_video_v2(ndi_receiver,
 							   &video_frame2);
