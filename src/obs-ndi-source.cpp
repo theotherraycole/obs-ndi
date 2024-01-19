@@ -93,15 +93,12 @@ typedef struct {
 
 typedef struct {
 	obs_source_t *obs_source;
+	os_sem_t *pulseSem;
 	ndi_source_config_t config;
-
+	bool pulseFlag;
 	bool running;
 	pthread_t av_thread;
-
 	float   pulse;
-	boolean   pulseFlag;
-	os_sem_t *pulseSem;
-
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -399,13 +396,21 @@ auto s = (ndi_source_t *)data;
 if (s->pulse != aSecs)
     s->pulse = aSecs;
 
-if (s->pulseSem != NULL &&
-    s->pulseFlag)
+if (s->pulseSem != NULL)
 {
-    s->pulseFlag = false;
-    os_sem_post(s->pulseSem);
+    if (s->pulseFlag)
+    {
+    	s->pulseFlag = false;
+    	os_sem_post(s->pulseSem);
+    }
+    else
+    {
+	blog(LOG_INFO, "[obs-ndi] ndi_source_thread '%s' - tick with no data.",
+	     obs_source_ndi_receiver_name);
+    }
+		
 }
-	
+
 }
 
 void *ndi_source_thread(void *data)
