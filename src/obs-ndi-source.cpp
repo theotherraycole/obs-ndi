@@ -393,7 +393,7 @@ void ndi_source_thread_process_video2(ndi_source_config_t *config,
 void ndi_source_tick(void *data, float aSecs)
 {
 
-auto s = (struct ndi_source *)data;
+auto s = (ndi_source_t *)data;
 
 if (s->pulse != aSecs)
     s->pulse = aSecs;
