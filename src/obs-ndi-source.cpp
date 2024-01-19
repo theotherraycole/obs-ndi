@@ -944,7 +944,7 @@ void ndi_source_update(void *data, obs_data_t *settings)
 
 	config.framesync_enabled = obs_data_get_bool(settings, PROP_FRAMESYNC);
 
-	if (config.framesync_enabled)
+	//if (config.framesync_enabled)
                os_sem_init(&s->pSem, 0);
 
 	config.hw_accel_enabled = obs_data_get_bool(settings, PROP_HW_ACCEL);
