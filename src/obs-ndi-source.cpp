@@ -900,6 +900,11 @@ void ndi_source_thread_process_video2(ndi_source_config_t *config,
 
 void ndi_source_thread_start(ndi_source_t *s)
 {
+	
+	if (s->pSem != NULL) os_sem_post(s->pSem);
+	
+        os_sem_init(&s->pSem, 0);
+	
 	s->running = true;
 	pthread_create(&s->av_thread, nullptr, ndi_source_thread, s);
 	blog(LOG_INFO,
@@ -926,9 +931,6 @@ void ndi_source_update(void *data, obs_data_t *settings)
 	blog(LOG_INFO, "[obs-ndi] +ndi_source_update('%s'...)", name);
 
 	ndi_source_config_t config = s->config;
-
-	if (s->pSem != NULL)
-		s->pSem = NULL;
 		
 	config.ndi_source_name = obs_data_get_string(settings, PROP_SOURCE);
 	config.bandwidth = (int)obs_data_get_int(settings, PROP_BANDWIDTH);
@@ -943,10 +945,6 @@ void ndi_source_update(void *data, obs_data_t *settings)
 	}
 
 	config.framesync_enabled = obs_data_get_bool(settings, PROP_FRAMESYNC);
-
-	//if (config.framesync_enabled)
-               os_sem_init(&s->pSem, 0);
-
 	config.hw_accel_enabled = obs_data_get_bool(settings, PROP_HW_ACCEL);
 
 	bool alpha_filter_enabled = obs_data_get_bool(settings, PROP_FIX_ALPHA);
