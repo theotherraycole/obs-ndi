@@ -687,7 +687,7 @@ void *ndi_source_thread(void *data)
 				ndi_frame_sync, &audio_frame2,
 				0, // "Your desired sample rate. 0 for “use source”."
 				0, // "Your desired channel count. 0 for “use source”."
-				1024);
+				2048);
 			if (audio_frame2.p_data &&
 			    (audio_frame2.timestamp > timestamp_audio)) {
 				//blog(LOG_INFO, "a");//udio_frame";
