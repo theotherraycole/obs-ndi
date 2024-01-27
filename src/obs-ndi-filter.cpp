@@ -150,7 +150,8 @@ void ndi_filter_raw_video(void *data, video_data *frame)
 	video_frame.line_stride_in_bytes = frame->linesize[0];
 
 	pthread_mutex_lock(&f->ndi_sender_video_mutex);
-	ndiLib->send_send_video_v2(f->ndi_sender, &video_frame);
+	ndiLib->send_send_video_v2_async(f->ndi_sender, NULL);
+	ndiLib->send_send_video_v2_async(f->ndi_sender, &video_frame);
 	pthread_mutex_unlock(&f->ndi_sender_video_mutex);
 }
 
