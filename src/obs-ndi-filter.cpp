@@ -218,10 +218,6 @@ void ndi_filter_offscreen_render(void *data, uint32_t, uint32_t)
 		video_frame output_frame;
 		if (video_output_lock_frame(f->video_output, &output_frame, 1,
 					    os_gettime_ns())) {
-			//if (f->video_data) {
-			//	gs_stagesurface_unmap(f->stagesurface);
-			//	f->video_data = nullptr;
-			//}
 
 			gs_stage_texture(
 				f->stagesurface,
@@ -324,7 +320,10 @@ void ndi_filter_destroy(void *data)
 	ndiLib->send_destroy(f->ndi_sender);
 	pthread_mutex_unlock(&f->ndi_sender_audio_mutex);
 	pthread_mutex_unlock(&f->ndi_sender_video_mutex);
-
+	if (f->video_data) {
+		gs_stagesurface_unmap(f->stagesurface);
+		f->video_data = nullptr;
+	}
 	gs_stagesurface_unmap(f->stagesurface);
 	gs_stagesurface_destroy(f->stagesurface);
 	gs_texrender_destroy(f->texrender);
