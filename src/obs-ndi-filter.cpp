@@ -150,7 +150,11 @@ void ndi_filter_raw_video(void *data, video_data *frame)
 	video_frame.line_stride_in_bytes = frame->linesize[0];
 
 	pthread_mutex_lock(&f->ndi_sender_video_mutex);
-	ndiLib->send_send_video_async_v2(f->ndi_sender, NULL);
+	//This call was to make sure the previous frame processed.
+	//But...there may not be a need to do this unless NDI is not keeping up...
+	//in which case, why use it, right? Because the SDK says the next async call will
+	// not return before the previous one finishes anyway...
+	//ndiLib->send_send_video_async_v2(f->ndi_sender, NULL);
 	ndiLib->send_send_video_async_v2(f->ndi_sender, &video_frame);
 	pthread_mutex_unlock(&f->ndi_sender_video_mutex);
 }
@@ -411,7 +415,7 @@ obs_audio_data *ndi_filter_asyncaudio(void *data, obs_audio_data *audio_data)
 	audio_frame.p_data = (float *)f->audio_conv_buffer;
 
 	pthread_mutex_lock(&f->ndi_sender_audio_mutex);
-	ndiLib->send_send_audio_v2(f->ndi_sender, &audio_frame);
+	ndiLib->send_send_audio_async_v2(f->ndi_sender, &audio_frame);
 	pthread_mutex_unlock(&f->ndi_sender_audio_mutex);
 
 	return audio_data;
