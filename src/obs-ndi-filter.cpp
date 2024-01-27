@@ -227,7 +227,7 @@ void ndi_filter_offscreen_render(void *data, uint32_t, uint32_t)
 				f->stagesurface,
 				gs_texrender_get_texture(f->texrender));
 
-			if (f->video_data != NULL)
+			if (f->video_data == NULL)
 				gs_stagesurface_map(f->stagesurface, &f->video_data,
 						    &f->video_linesize);
 
