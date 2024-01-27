@@ -237,7 +237,7 @@ void ndi_filter_offscreen_render(void *data, uint32_t, uint32_t)
 				       //f->video_data + src_offset, linesize);
 
 			memcpy(output_frame.data[0], f->video_data, linesize * f->known_height);
-			}
+			
 
 			video_output_unlock_frame(f->video_output);
 		}
