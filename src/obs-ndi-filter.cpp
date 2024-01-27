@@ -415,7 +415,7 @@ obs_audio_data *ndi_filter_asyncaudio(void *data, obs_audio_data *audio_data)
 	audio_frame.p_data = (float *)f->audio_conv_buffer;
 
 	pthread_mutex_lock(&f->ndi_sender_audio_mutex);
-	ndiLib->send_send_audio_async_v2(f->ndi_sender, &audio_frame);
+	ndiLib->send_send_audio_v2(f->ndi_sender, &audio_frame);
 	pthread_mutex_unlock(&f->ndi_sender_audio_mutex);
 
 	return audio_data;
