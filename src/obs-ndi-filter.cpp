@@ -154,7 +154,7 @@ void ndi_filter_raw_video(void *data, video_data *frame)
 	//But...there may not be a need to do this unless NDI is not keeping up...
 	//in which case, why use it, right? Because the SDK says the next async call will
 	// not return before the previous one finishes anyway...
-	//ndiLib->send_send_video_async_v2(f->ndi_sender, NULL);
+	ndiLib->send_send_video_async_v2(f->ndi_sender, NULL);
 	ndiLib->send_send_video_async_v2(f->ndi_sender, &video_frame);
 	pthread_mutex_unlock(&f->ndi_sender_video_mutex);
 }
@@ -258,6 +258,8 @@ void ndi_filter_update(void *data, obs_data_t *settings)
 		pthread_mutex_lock(&f->ndi_sender_video_mutex);
 	}
 	pthread_mutex_lock(&f->ndi_sender_audio_mutex);
+	
+	ndiLib->send_send_video_async_v2(f->ndi_sender, NULL);
 	ndiLib->send_destroy(f->ndi_sender);
 	f->ndi_sender = ndiLib->send_create(&send_desc);
 	pthread_mutex_unlock(&f->ndi_sender_audio_mutex);
@@ -317,6 +319,7 @@ void ndi_filter_destroy(void *data)
 
 	pthread_mutex_lock(&f->ndi_sender_video_mutex);
 	pthread_mutex_lock(&f->ndi_sender_audio_mutex);
+	ndiLib->send_send_video_async_v2(f->ndi_sender, NULL);
 	ndiLib->send_destroy(f->ndi_sender);
 	pthread_mutex_unlock(&f->ndi_sender_audio_mutex);
 	pthread_mutex_unlock(&f->ndi_sender_video_mutex);
@@ -324,7 +327,6 @@ void ndi_filter_destroy(void *data)
 		gs_stagesurface_unmap(f->stagesurface);
 		f->video_data = nullptr;
 	}
-	gs_stagesurface_unmap(f->stagesurface);
 	gs_stagesurface_destroy(f->stagesurface);
 	gs_texrender_destroy(f->texrender);
 
