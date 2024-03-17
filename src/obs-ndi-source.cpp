@@ -437,6 +437,8 @@ void *ndi_source_thread(void *data)
 	NDIlib_audio_frame_v2_t audio_frame2;
 	int64_t timestamp_audio = 0;
 	int64_t timestamp_video = 0;
+	int64_t lastTimestamp_video = 0;
+
 
 	NDIlib_audio_frame_v3_t audio_frame3;
 	NDIlib_frame_type_e frame_received = NDIlib_frame_type_none;
@@ -709,6 +711,12 @@ void *ndi_source_thread(void *data)
 			if (video_frame2.p_data) { // &&
 			    //(video_frame2.timestamp > timestamp_video)) {
 				//blog(LOG_INFO, "v");//ideo_frame";
+
+				if (timestamp_video == video_frame2.timestamp)
+					log(LOG_INFO,
+				        "[obs-ndi] ndi_source_thread: %s No new frame was available",
+				     	obs_source_ndi_receiver_name);	
+				
 				timestamp_video = video_frame2.timestamp;
 				ndi_source_thread_process_video2(
 					&config_most_recent, &video_frame2,
