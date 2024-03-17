@@ -713,9 +713,9 @@ void *ndi_source_thread(void *data)
 				//blog(LOG_INFO, "v");//ideo_frame";
 
 				if (timestamp_video == video_frame2.timestamp)
-					log(LOG_INFO,
-				        "[obs-ndi] ndi_source_thread: %s No new frame was available",
-				     	obs_source_ndi_receiver_name);	
+					blog(LOG_INFO,
+				           "[obs-ndi] ndi_source_thread: %s No new frame was available",
+				     	   obs_source_ndi_receiver_name);	
 				
 				timestamp_video = video_frame2.timestamp;
 				ndi_source_thread_process_video2(
