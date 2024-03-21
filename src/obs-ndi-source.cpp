@@ -97,6 +97,7 @@ typedef struct {
 	ndi_source_config_t config;
 	bool pulseFlag;
 	bool running;
+        bool prevTallyPgm;
 	pthread_t av_thread;
 	float   pulse;
 } ndi_source_t;
@@ -445,6 +446,8 @@ void *ndi_source_thread(void *data)
 
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
 
+	s->prevTallyPgm = true;
+
 	while (s->running) {
 		//
 		// Main NDI receiver loop
@@ -680,6 +683,22 @@ void *ndi_source_thread(void *data)
 		}
 	
 		if (ndi_frame_sync) {
+
+			if (s->prevTallyPgm !=
+			    s->config.tally.on_program)
+
+			{
+
+				if (!s->config.tally.on_program)
+				{
+					ndiLib->framesync_destroy(ndi_frame_sync);
+					ndi_frame_sync = nullptr;
+					ndi_frame_sync = ndiLib->framesync_create(ndi_receiver);					
+				};
+				
+				s->prevTallyPgm = s->config.tally.on_program;
+				
+			};
 			
 			//
 			// AUDIO
