@@ -97,7 +97,6 @@ typedef struct {
 	ndi_source_config_t config;
 	bool pulseFlag;
 	bool running;
-        bool prevTallyPgm;
 	pthread_t av_thread;
 	float   pulse;
 } ndi_source_t;
@@ -446,8 +445,8 @@ void *ndi_source_thread(void *data)
 
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
 
-	s->prevTallyPgm = true;
-
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	
 	while (s->running) {
 		//
 		// Main NDI receiver loop
@@ -615,7 +614,7 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name);
 #endif
 			std::this_thread::sleep_for(
-				std::chrono::milliseconds(100));
+				std::chrono::milliseconds(10));
 			continue;
 		}
 
@@ -683,37 +682,6 @@ void *ndi_source_thread(void *data)
 		}
 	
 		if (ndi_frame_sync) {
-
-			if (s->prevTallyPgm !=
-			    s->config.tally.on_program)
-
-			{
-
-				if (!s->config.tally.on_program)
-				{
-					// Just went inactive. Drain reads and reestablish framesync.
-					// This will prevent cameras sending just a little head of us
-					// not top the buffer causing a multiple-frame unavailable condition.
-					ndiLib->framesync_destroy(ndi_frame_sync);
-					ndi_frame_sync = nullptr;
-					video_frame2 = {};
-				
-					while (ndiLib->recv_capture_v3
-								(ndi_receiver,
-								 &video_frame2,
-								 nullptr,
-								 nullptr, 0) == NDIlib_frame_type_video)
-					{
-						ndiLib->recv_free_video_v2(ndi_receiver,
-									   &video_frame2);
-					};
-					
-					ndi_frame_sync = ndiLib->framesync_create(ndi_receiver);					
-				};
-				
-				s->prevTallyPgm = s->config.tally.on_program;
-				
-			};
 			
 			//
 			// AUDIO
