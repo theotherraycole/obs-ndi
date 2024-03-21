@@ -516,12 +516,12 @@ void *ndi_source_thread(void *data)
 			config_last_used.latency = config_most_recent.latency;
 
 			reset_recv_desc = &recv_desc;
-			if (config_most_recent.latency == PROP_LATENCY_NORMAL)
+			//if (config_most_recent.latency == PROP_LATENCY_NORMAL)
 				recv_desc.color_format =
 					NDIlib_recv_color_format_UYVY_BGRA;
-			else
-				recv_desc.color_format =
-					NDIlib_recv_color_format_fastest;
+			//else
+				//recv_desc.color_format =
+					//NDIlib_recv_color_format_fastest;
 			blog(LOG_INFO,
 			     "[obs-ndi] ndi_source_thread: '%s' latency changed; Setting recv_desc.color_format='%d'",
 			     obs_source_ndi_receiver_name,
