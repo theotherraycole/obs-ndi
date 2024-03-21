@@ -691,8 +691,23 @@ void *ndi_source_thread(void *data)
 
 				if (!s->config.tally.on_program)
 				{
+					// Just went inactive. Drain reads and reestablish framesync.
+					// This will prevent cameras sending just a little head of us
+					// not top the buffer causing a multiple-frame unavailable condition.
 					ndiLib->framesync_destroy(ndi_frame_sync);
 					ndi_frame_sync = nullptr;
+					video_frame2 = {};
+				
+					while (ndiLib->recv_capture_v3
+								(ndi_receiver,
+								 &video_frame2,
+								 nullptr,
+								 nullptr, 0) == NDIlib_frame_type_video)
+					{
+						ndiLib->recv_free_video_v2(ndi_receiver,
+									   &video_frame2);
+					};
+					
 					ndi_frame_sync = ndiLib->framesync_create(ndi_receiver);					
 				};
 				
@@ -731,9 +746,9 @@ void *ndi_source_thread(void *data)
 			    //(video_frame2.timestamp > timestamp_video)) {
 				//blog(LOG_INFO, "v");//ideo_frame";
 
-				if (timestamp_video == video_frame2.timestamp)
+				if (timestamp_video == video_frame2.timestamp && s->config.tally.on_program)
 					blog(LOG_INFO,
-				           "[obs-ndi] ndi_source_thread: %s No new frame was available",
+				           "[obs-ndi] ndi_source_thread: %s Is live but last frame duplicated",
 				     	   obs_source_ndi_receiver_name);	
 				
 				timestamp_video = video_frame2.timestamp;
@@ -742,9 +757,10 @@ void *ndi_source_thread(void *data)
 					obs_source, &obs_video_frame);
 			}
 			else
+			if (s->config.tally.on_program)
 			{
 				blog(LOG_INFO,
-				     "[obs-ndi] ndi_source_thread: %s No new frame was available",
+				     "[obs-ndi] ndi_source_thread: %s Is live but new frame unavailable",
 				     obs_source_ndi_receiver_name);
 
 			}
