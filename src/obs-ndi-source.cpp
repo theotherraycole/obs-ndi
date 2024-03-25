@@ -682,6 +682,15 @@ void *ndi_source_thread(void *data)
 		}
 	
 		if (ndi_frame_sync) {
+
+			if (s->pulseSem != NULL)
+			{
+				// Wait for pulse then rest for 1/4 pulse to (hopefully) be certain we do not
+				// end up adding a frame while rendering.
+				s->pulseFlag = true;
+	              		os_sem_wait(s->pulseSem);					
+				std::this_thread::sleep_for(std::chrono::milliseconds((int) (s->pulse * 250)));
+			};
 			
 			//
 			// AUDIO
@@ -720,24 +729,20 @@ void *ndi_source_thread(void *data)
 				     	   obs_source_ndi_receiver_name);	
 				
 				timestamp_video = video_frame2.timestamp;
+				
 				ndi_source_thread_process_video2(
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
 			}
 			else
-			if (s->config.tally.on_program)
 			{
-				blog(LOG_INFO,
-				     "[obs-ndi] ndi_source_thread: %s Is live but new frame unavailable",
-				     obs_source_ndi_receiver_name);
-
+				if (s->config.tally.on_program)
+				{
+					blog(LOG_INFO,
+					     "[obs-ndi] ndi_source_thread: %s Is live but new frame unavailable",
+					     obs_source_ndi_receiver_name);
+				}
 			}
-			
-			if (s->pulseSem != NULL)
-			{
-			   s->pulseFlag = true;
-	              	   os_sem_wait(s->pulseSem);
-			};
 			
 			ndiLib->framesync_free_video(ndi_frame_sync,
 						     &video_frame2);
