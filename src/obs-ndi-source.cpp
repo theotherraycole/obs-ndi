@@ -100,6 +100,7 @@ typedef struct {
 	pthread_t av_thread;
 	float   pulse;
 	int64_t frameCnt;
+	char	runState;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -416,8 +417,9 @@ if (s->pulseSem != NULL)
 		obs_source_ndi_receiver_name_utf8.constData();
 
 	blog(LOG_INFO,
-	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame.",
-	     obs_source_ndi_receiver_name);
+	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame, state %c.",
+	     obs_source_ndi_receiver_name,
+		s->runState);
 	    
     };
 }
@@ -462,13 +464,20 @@ void *ndi_source_thread(void *data)
 
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
 
+	s->runState = 'S'; // sleeping
+
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	
+
+	s->runState = 'I'; // init
+
 	while (s->running) {
 		//
 		// Main NDI receiver loop
 		//
 
+		s->runState = 'C'; // checking
+
+		
 		// semi-atomic not *TOO* heavy snapshot
 		config_most_recent = s->config;
 
@@ -557,6 +566,9 @@ void *ndi_source_thread(void *data)
 								  : "disabled");
 		}
 		if (reset_recv_desc) {
+
+			s->runState = 'R'; // resetting
+
 			reset_recv_desc = nullptr;
 
 			blog(LOG_INFO,
@@ -704,11 +716,14 @@ void *ndi_source_thread(void *data)
 			{
 				// Wait for pulse then rest for 1/4 pulse to (hopefully) be certain we do not
 				// end up adding a frame while rendering.
+				s->runState = 'w'; // sem_wait				
 				s->pulseFlag = true;
 	              		os_sem_wait(s->pulseSem);					
 				//std::this_thread::sleep_for(std::chrono::milliseconds((int) (s->pulse * 250)));
 			};
-			
+
+			s->runState = 'a'; // grab audio
+
 			//
 			// AUDIO
 			//
@@ -729,6 +744,8 @@ void *ndi_source_thread(void *data)
 			ndiLib->framesync_free_audio(ndi_frame_sync,
 						     &audio_frame2);
 
+			s->runState = 'v'; // grab video
+
 			//
 			// VIDEO
 			//
@@ -746,6 +763,8 @@ void *ndi_source_thread(void *data)
 				     	   obs_source_ndi_receiver_name);	
 				
 				timestamp_video = video_frame2.timestamp;
+
+				s->runState = 'p'; // processing
 				
 				ndi_source_thread_process_video2(
 					&config_most_recent, &video_frame2,
@@ -770,9 +789,12 @@ void *ndi_source_thread(void *data)
 			{
 				// Let tick thread know we finished
 				//s->pulseFlag = true;
+				s->runState = 'd'; // we are done
 	              		os_sem_post(s->pulseSem);					
 			};
-			
+
+			s->runState = 'f'; // we are freeing
+
 			ndiLib->framesync_free_video(ndi_frame_sync,
 						     &video_frame2);
 			
