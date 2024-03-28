@@ -402,6 +402,8 @@ if (s->pulseSem != NULL)
     {
     	s->pulseFlag = false;
     	os_sem_post(s->pulseSem);
+	if (s->running)
+		os_sem_wait(s->pulseSem);
     }	
 }
 
@@ -689,7 +691,7 @@ void *ndi_source_thread(void *data)
 				// end up adding a frame while rendering.
 				s->pulseFlag = true;
 	              		os_sem_wait(s->pulseSem);					
-				std::this_thread::sleep_for(std::chrono::milliseconds((int) (s->pulse * 250)));
+				//std::this_thread::sleep_for(std::chrono::milliseconds((int) (s->pulse * 250)));
 			};
 			
 			//
@@ -743,6 +745,13 @@ void *ndi_source_thread(void *data)
 					     obs_source_ndi_receiver_name);
 				}
 			}
+
+			if (s->pulseSem != NULL)
+			{
+				// Let tick thread know we finished
+				s->pulseFlag = true;
+	              		os_sem_post(s->pulseSem);					
+			};
 			
 			ndiLib->framesync_free_video(ndi_frame_sync,
 						     &video_frame2);
