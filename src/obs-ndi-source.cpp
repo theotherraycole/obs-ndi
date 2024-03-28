@@ -498,6 +498,9 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name,
 			     recv_desc.p_ndi_recv_name);
 		}
+
+		s->runState = 'n'; // checking name
+		
 		if (config_most_recent.ndi_source_name !=
 		    config_last_used.ndi_source_name) {
 			config_last_used.ndi_source_name =
@@ -511,6 +514,9 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name,
 			     recv_desc.source_to_connect_to.p_ndi_name);
 		}
+
+		s->runState = 'b'; // checkin bw
+
 		if (config_most_recent.bandwidth !=
 		    config_last_used.bandwidth) {
 			config_last_used.bandwidth =
@@ -538,6 +544,9 @@ void *ndi_source_thread(void *data)
 			     "[obs-ndi] ndi_source_thread: '%s' bandwidth changed; Setting recv_desc.bandwidth='%d'",
 			     obs_source_ndi_receiver_name, recv_desc.bandwidth);
 		}
+
+		s->runState = 'l'; // checking latency
+		
 		if (config_most_recent.latency != config_last_used.latency) {
 			config_last_used.latency = config_most_recent.latency;
 
@@ -553,6 +562,9 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name,
 			     recv_desc.color_format);
 		}
+		
+		s->runState = 'f'; // checking framesync
+		
 		if (config_most_recent.framesync_enabled !=
 		    config_last_used.framesync_enabled) {
 			config_last_used.framesync_enabled =
@@ -636,7 +648,9 @@ void *ndi_source_thread(void *data)
 				}
 			}
 		}
-
+		
+		s->runState = 'n'; // checking num connections
+		
 		if (ndiLib->recv_get_no_connections(ndi_receiver) == 0) {
 
 			if (s->frameCnt != 0)
@@ -650,6 +664,8 @@ void *ndi_source_thread(void *data)
 			continue;
 		}
 
+		s->runState = 'h'; // checking hw accel
+		
 		if (config_most_recent.hw_accel_enabled !=
 		    config_last_used.hw_accel_enabled) {
 			config_last_used.hw_accel_enabled =
@@ -667,6 +683,8 @@ void *ndi_source_thread(void *data)
 			ndiLib->recv_send_metadata(ndi_receiver,
 						   &hwAccelMetadata);
 		}
+
+		s->runState = 'z'; // checking PTZ
 
 		if (config_most_recent.ptz.enabled) {
 			const static float tollerance = 0.001f;
@@ -698,6 +716,8 @@ void *ndi_source_thread(void *data)
 			}
 		}
 
+		s->runState = 't'; // checking tally
+		
 		if (config_most_recent.tally.on_preview !=
 			    config_last_used.tally.on_preview ||
 		    config_most_recent.tally.on_program !=
@@ -715,6 +735,8 @@ void *ndi_source_thread(void *data)
 	
 		if (ndi_frame_sync) {
 
+			s->runState = 'x'; // checking Sem
+			
 			if (s->pulseSem != NULL)
 			{
 				// Wait for pulse then rest for 1/4 pulse to (hopefully) be certain we do not
