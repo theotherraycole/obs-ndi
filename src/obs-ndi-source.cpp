@@ -99,6 +99,7 @@ typedef struct {
 	bool running;
 	pthread_t av_thread;
 	float   pulse;
+	int64_t frameCnt;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -405,6 +406,20 @@ if (s->pulseSem != NULL)
 	if (s->running)
 		os_sem_wait(s->pulseSem);
     }	
+    else
+    if (s->frameCnt > 0)
+    {
+	auto obs_source = s->obs_source;
+	QByteArray obs_source_ndi_receiver_name_utf8 =
+		QString(obs_source_get_name(obs_source)).toUtf8();
+	const char *obs_source_ndi_receiver_name =
+		obs_source_ndi_receiver_name_utf8.constData();
+
+	blog(LOG_INFO,
+	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame.",
+	     obs_source_ndi_receiver_name);
+	    
+    };
 }
 
 }
@@ -735,6 +750,8 @@ void *ndi_source_thread(void *data)
 				ndi_source_thread_process_video2(
 					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
+
+				s->frameCnt ++;
 			}
 			else
 			{
@@ -955,6 +972,7 @@ void ndi_source_thread_process_video2(ndi_source_config_t *config,
 void ndi_source_thread_start(ndi_source_t *s)
 {
 	s->pulseFlag = false;
+	s->frameCnt = 0;
         os_sem_init(&s->pulseSem, 0);
 	
 	s->running = true;
