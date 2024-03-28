@@ -761,12 +761,15 @@ void *ndi_source_thread(void *data)
 					     "[obs-ndi] ndi_source_thread: %s Is live but new frame unavailable",
 					     obs_source_ndi_receiver_name);
 				}
+
+				s->frameCnt ++;
+
 			}
 
 			if (s->pulseSem != NULL)
 			{
 				// Let tick thread know we finished
-				s->pulseFlag = true;
+				//s->pulseFlag = true;
 	              		os_sem_post(s->pulseSem);					
 			};
 			
