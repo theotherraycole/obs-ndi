@@ -568,6 +568,7 @@ void *ndi_source_thread(void *data)
 		if (reset_recv_desc) {
 
 			s->runState = 'R'; // resetting
+			s->frameCnt = 0;   // reset frame counter
 
 			reset_recv_desc = nullptr;
 
@@ -637,11 +638,13 @@ void *ndi_source_thread(void *data)
 		}
 
 		if (ndiLib->recv_get_no_connections(ndi_receiver) == 0) {
-#if 0
-			blog(LOG_INFO,
-			     "[obs-ndi] ndi_source_thread: '%s' No connection",
-			     obs_source_ndi_receiver_name);
-#endif
+
+			if (s->frameCnt != 0)
+				
+				blog(LOG_INFO,
+				     "[obs-ndi] ndi_source_thread: '%s' Dropped connection???",
+			     		obs_source_ndi_receiver_name);
+			
 			std::this_thread::sleep_for(
 				std::chrono::milliseconds(10));
 			continue;
