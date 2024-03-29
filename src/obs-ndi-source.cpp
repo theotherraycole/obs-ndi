@@ -651,7 +651,7 @@ void *ndi_source_thread(void *data)
 		
 		s->runState = 'n'; // checking num connections
 		
-		if (!ndi_frame_sync && s->ndiLib->recv_get_no_connections(ndi_receiver) == 0) {
+		if (!ndi_frame_sync && ndiLib->recv_get_no_connections(ndi_receiver) == 0) {
 
 			if (s->frameCnt != 0)
 				
