@@ -596,7 +596,7 @@ void *ndi_source_thread(void *data)
 			if (ndi_receiver) {
 #if 1
 				blog(LOG_INFO,
-				     "[obs-ndi] ndi_source_thread: '%s' ndiLib->recv_destroy(ndi_receiver)",
+				     "[obs-ndi] ndi_source_thread: '%s' ndiLib->recv_destroy(ndi_receiver)",ve
 				     obs_source_ndi_receiver_name);
 #endif
 				ndiLib->recv_destroy(ndi_receiver);
@@ -782,9 +782,9 @@ void *ndi_source_thread(void *data)
 			    //(video_frame2.timestamp > timestamp_video)) {
 				//blog(LOG_INFO, "v");//ideo_frame";
 
-				if (timestamp_video == video_frame2.timestamp && s->config.tally.on_program)
+				if (timestamp_video == video_frame2.timestamp) // && s->config.tally.on_program)
 					blog(LOG_INFO,
-				           "[obs-ndi] ndi_source_thread: %s Is live but last frame duplicated",
+				           "[obs-ndi] ndi_source_thread: %s last frame duplicated",
 				     	   obs_source_ndi_receiver_name);	
 				
 				timestamp_video = video_frame2.timestamp;
