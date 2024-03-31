@@ -596,7 +596,7 @@ void *ndi_source_thread(void *data)
 			if (ndi_receiver) {
 #if 1
 				blog(LOG_INFO,
-				     "[obs-ndi] ndi_source_thread: '%s' ndiLib->recv_destroy(ndi_receiver)",ve
+				     "[obs-ndi] ndi_source_thread: '%s' ndiLib->recv_destroy(ndi_receiver)",
 				     obs_source_ndi_receiver_name);
 #endif
 				ndiLib->recv_destroy(ndi_receiver);
