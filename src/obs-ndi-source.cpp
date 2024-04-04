@@ -430,7 +430,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
 			QString(obs_source_get_name(obs_source)).toUtf8();
-		const char *obs_source_ndi_receiver_name =
+		obs_source_ndi_receiver_name =
 			obs_source_ndi_receiver_name_utf8.constData();
 	}
 	
