@@ -263,7 +263,7 @@ obs_properties_t *ndi_source_getproperties(void *)
 		return true;
 	});
 
-	obs_property_t *snyc_modes = obs_properties_add_list(
+	obs_property_t *sync_modes = obs_properties_add_list(
 		props, PROP_SYNC, obs_module_text("NDIPlugin.SourceProps.Sync"),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(
@@ -415,7 +415,7 @@ if (oFrameNum <= iFrameNum)
 else
 	Distance = (-1 * iFrameNum) + MAX_NDI_FRAMES - oFrameNum;
 
-if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->bideoFrame2[oFrameNum].p_data != NULL)
+if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
 
 	obs_source_frame obs_video_frame = {};
