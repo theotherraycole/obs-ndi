@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define MAX_NDI_FRAMES 30
-#define NSYNC_NDI_FRAMES 8
+#define NSYNC_NDI_FRAMES 15
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -477,6 +477,8 @@ if (s->frameCnt > NSYNC_NDI_FRAMES)
 	const char *obs_source_ndi_receiver_name =
 		obs_source_ndi_receiver_name_utf8.constData();
 
+	s->frameCnt = 0;  // wait for buffer to build back
+	
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame (%d %d), state %c.",
 	     obs_source_ndi_receiver_name,
