@@ -686,6 +686,7 @@ void *ndi_source_thread(void *data)
 				     obs_source_ndi_receiver_name,
 				     ndi_frame_sync);
 #endif
+#ifdef _SRC_				
 				if (!ndi_frame_sync) {
 					blog(LOG_ERROR,
 					     "[obs-ndi] ndi_source_thread: '%s' Cannot create ndi_frame_sync for NDI source '%s'",
@@ -694,6 +695,7 @@ void *ndi_source_thread(void *data)
 						     .p_ndi_name);
 					break;
 				}
+#endif				
 			}
 		}
 		
