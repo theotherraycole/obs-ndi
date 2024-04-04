@@ -542,6 +542,9 @@ void *ndi_source_thread(void *data)
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
+	os_inhibit_t *pInhibit = os_inhibit_sleep_create("Idle is bad for NDI");
+	os_inhibit_sleep_set_active(pInhibit, true);
+	
 	s->runState = 'I'; // init
 
 	while (s->running) {
@@ -883,6 +886,8 @@ void *ndi_source_thread(void *data)
 			}
 		}
 	}
+
+	os_inhibit_sleep_destroy(pInhibit);
 
 	if (ndi_frame_sync) {
 		ndiLib->framesync_destroy(ndi_frame_sync);
