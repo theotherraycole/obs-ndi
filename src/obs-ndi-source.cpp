@@ -839,6 +839,8 @@ void *ndi_source_thread(void *data)
 								 nullptr, 1000);
 	
 			if (frame_received == NDIlib_frame_type_video) {
+
+				s->frameCnt ++;
 				
 				//ndi_source_thread_process_video2(
 				//	&config_most_recent, &video_frame2,
