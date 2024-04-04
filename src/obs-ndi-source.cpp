@@ -846,9 +846,7 @@ void *ndi_source_thread(void *data)
 
 			
 		} else {
-
-			s->iFrameNum = (s->iFrameNum + 1) % MAX_NDI_FRAMES;
-
+			
 			if (s->videoFrame2[s->iFrameNum].p_data != NULL)
 
 				continue;
@@ -859,21 +857,10 @@ void *ndi_source_thread(void *data)
 								 nullptr, 1000);
 	
 			if (frame_received == NDIlib_frame_type_video) {
+				
+				s->iFrameNum = (s->iFrameNum + 1) % MAX_NDI_FRAMES;
 
 				s->frameCnt ++;
-				
-				//ndi_source_thread_process_video2(
-				//	&config_most_recent, &video_frame2,
-				//	obs_source, &obs_video_frame);
-
-				//if (s->pulseSem != NULL)
-				//{
-			   	//	s->pulseFlag = true;
-	              	   	//	os_sem_wait(s->pulseSem);
-				//};	
-				
-				//ndiLib->recv_free_video_v2(ndi_receiver,
-				//			   &video_frame2);
 	
 				continue;
 			}
