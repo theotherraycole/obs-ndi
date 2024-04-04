@@ -424,6 +424,13 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	obs_source_frame obs_video_frame = {};
 
 	const char *obs_source_ndi_receiver_name = "";
+	const char *liveStatus = " - NOT live";
+
+	if (s->config.tally.on_program)		// are we live?
+	{
+		Distance --;			// give it some slack...
+		liveStatus = " - LIVE!";
+	};
 	
 	if (Distance > NSYNC_NDI_FRAMES)
 	{
@@ -432,21 +439,21 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 			QString(obs_source_get_name(obs_source)).toUtf8();
 		obs_source_ndi_receiver_name =
 			obs_source_ndi_receiver_name_utf8.constData();
-	}
-	
-	while (Distance > NSYNC_NDI_FRAMES)
-	{
-
-		blog(LOG_INFO,
-	     	     "[obs-ndi] ndi_source_thread: '%s' is ahead...%d - Dropping frame",
-		     obs_source_ndi_receiver_name,
-		     Distance);
 		
-		ndiLib->recv_free_video_v2(s->ndi_receiver,
-					   &(s->videoFrame2[oFrameNum]));
-		s->videoFrame2[oFrameNum].p_data = NULL;
-		Distance --;
-		oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+		while (Distance > NSYNC_NDI_FRAMES)
+		{
+			blog(LOG_INFO,
+	     	     	     "[obs-ndi] ndi_source_thread: '%s' is ahead...%d - Dropping frame %s",
+		     	     obs_source_ndi_receiver_name,
+			     Distance,
+			     liveStatus);
+		
+			ndiLib->recv_free_video_v2(s->ndi_receiver,
+						   &(s->videoFrame2[oFrameNum]));
+			s->videoFrame2[oFrameNum].p_data = NULL;
+			Distance --;
+			oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+		}
 	}
 	
 	ndi_source_thread_process_video2
