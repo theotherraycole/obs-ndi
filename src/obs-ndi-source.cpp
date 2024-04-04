@@ -407,11 +407,11 @@ int	oFrameNum = s->oFrameNum;
 int	iFrameNum = s->iFrameNum;
 int	Distance = 0;
 
+if (s->pulse != aSecs)
+   s->pulse = aSecs;
+	
 if (!s->pulseFlag)
 	return;
-	
-if (s->pulse != aSecs)
-	s->pulse = aSecs;
 
 if (oFrameNum <= iFrameNum)
 	Distance = iFrameNum - oFrameNum;
@@ -505,6 +505,7 @@ void *ndi_source_thread(void *data)
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
 
 	s->runState = 'S'; // sleeping
+	s->pulse = 1;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
@@ -817,10 +818,10 @@ void *ndi_source_thread(void *data)
 	
 				continue;
 			}
-			else {
-				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
-	     				obs_source_ndi_receiver_name);
-			}
+			//else {
+			//	blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
+	     		//		obs_source_ndi_receiver_name);
+			//}
 			s->runState = 'f'; // we are freeing
 
 			
