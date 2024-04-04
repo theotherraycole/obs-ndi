@@ -413,7 +413,7 @@ if (s->pulse != aSecs)
 if (oFrameNum <= iFrameNum)
 	Distance = iFrameNum - oFrameNum;
 else
-	Distance = (-1 * iFrameNum) + MAX_NDI_FRAMES - oFrameNum;
+	Distance = (iFrameNum + MAX_NDI_FRAMES) - oFrameNum;
 
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
@@ -431,7 +431,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 					   &(s->videoFrame2[oFrameNum]));
 		s->videoFrame2[oFrameNum].p_data = NULL;
 		Distance --;
-		s->oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+		oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
 	}
 	
 	ndi_source_thread_process_video2
@@ -455,8 +455,10 @@ else
 		obs_source_ndi_receiver_name_utf8.constData();
 
 	blog(LOG_INFO,
-	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame, state %c.",
+	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame (%d %d), state %c.",
 	     obs_source_ndi_receiver_name,
+		s->iFrameNum,
+		s->oFrameNum,
 		s->runState);
 	    
 };
