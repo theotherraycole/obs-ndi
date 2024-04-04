@@ -433,7 +433,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		liveStatus = " - LIVE!";
 	};
 
-	if (Distance < s->iLowBacklog || s->iBacklog == 0)
+	if (Distance < s->iLowBacklog || s->iLowBacklog == 0)
 	{
 		blog(LOG_INFO,
 	     	    "[obs-ndi] ndi_source_thread: Low backlog of %d",
@@ -538,7 +538,7 @@ void *ndi_source_thread(void *data)
 
 	s->runState = 'S'; // sleeping
 	s->pulse = 1;
-	s->iBacklog = 0;
+	s->iLowBacklog = 0;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
