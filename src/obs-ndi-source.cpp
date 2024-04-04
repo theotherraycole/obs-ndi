@@ -407,6 +407,9 @@ int	oFrameNum = s->oFrameNum;
 int	iFrameNum = s->iFrameNum;
 int	Distance = 0;
 
+if (!s->pulseFlag)
+	return;
+	
 if (s->pulse != aSecs)
 	s->pulse = aSecs;
 
@@ -636,6 +639,8 @@ void *ndi_source_thread(void *data)
 				     "[obs-ndi] ndi_source_thread: '%s' ndiLib->recv_destroy(ndi_receiver)",
 				     obs_source_ndi_receiver_name);
 #endif
+				s->pulseFlag = false;
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				int iCnt = 0;
 				while (iCnt < MAX_NDI_FRAMES)
 				{
@@ -668,10 +673,12 @@ void *ndi_source_thread(void *data)
 				     recv_desc.source_to_connect_to.p_ndi_name);
 				break;
 			}
-
+			
 			if (config_most_recent.framesync_enabled) {
 				timestamp_audio = 0;
 				timestamp_video = 0;
+
+				s->pulseFlag = true;
 
 #if 1
 				blog(LOG_INFO,
@@ -860,6 +867,19 @@ void *ndi_source_thread(void *data)
 	}
 
 	if (ndi_receiver) {
+
+		s->pulseFlag = false;
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		int iCnt = 0;
+		while (iCnt < MAX_NDI_FRAMES)
+		{
+			ndiLib->recv_free_video_v2(s->ndi_receiver,
+		   				   &(s->videoFrame2[iCnt]));
+
+			s->videoFrame2[iCnt].p_data = NULL;
+			iCnt ++;
+		}
+			
 		ndiLib->recv_destroy(ndi_receiver);
 		ndi_receiver = nullptr;
 	}
