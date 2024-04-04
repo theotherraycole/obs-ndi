@@ -423,11 +423,23 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 
 	obs_source_frame obs_video_frame = {};
 
+	const char *obs_source_ndi_receiver_name = "";
+	
+	if (Distance > NSYNC_NDI_FRAMES)
+	{
+		auto obs_source = s->obs_source;
+		QByteArray obs_source_ndi_receiver_name_utf8 =
+			QString(obs_source_get_name(obs_source)).toUtf8();
+		const char *obs_source_ndi_receiver_name =
+			obs_source_ndi_receiver_name_utf8.constData();
+	}
+	
 	while (Distance > NSYNC_NDI_FRAMES)
 	{
 
 		blog(LOG_INFO,
-	     	     "[obs-ndi]NDI is ahead...%d\n",
+	     	     "[obs-ndi] ndi_source_thread: '%s' is ahead...%d - Dropping frame",
+		     obs_source_ndi_receiver_name,
 		     Distance);
 		
 		ndiLib->recv_free_video_v2(s->ndi_receiver,
