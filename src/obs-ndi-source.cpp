@@ -431,7 +431,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 					   &(s->videoFrame2[oFrameNum]));
 		s->videoFrame2[oFrameNum].p_data = NULL;
 		Distance --;
-		oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+		s->oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
 	}
 	
 	ndi_source_thread_process_video2
@@ -493,8 +493,6 @@ void *ndi_source_thread(void *data)
 	NDIlib_audio_frame_v2_t audio_frame2;
 	int64_t timestamp_audio = 0;
 	int64_t timestamp_video = 0;
-	int64_t lastTimestamp_video = 0;
-
 
 	NDIlib_audio_frame_v3_t audio_frame3;
 	NDIlib_frame_type_e frame_received = NDIlib_frame_type_none;
