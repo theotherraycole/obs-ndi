@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define MAX_NDI_FRAMES 30
-#define SYNC_NDI_FRAMES 15;
+#define NSYNC_NDI_FRAMES 15;
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -263,7 +263,7 @@ obs_properties_t *ndi_source_getproperties(void *)
 		return true;
 	});
 
-	obs_property_t *_modes = obs_properties_add_list(
+	obs_property_t *snyc_modes = obs_properties_add_list(
 		props, PROP_SYNC, obs_module_text("NDIPlugin.SourceProps.Sync"),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(
@@ -407,10 +407,13 @@ int	oFrameNum = s->oFrameNum;
 int	iFrameNum = s->iFrameNum;
 int	Distance = 0;
 
+if (s->pulse != aSecs)
+	s->pulse = aSecs;
+
 if (oFrameNum <= iFrameNum)
 	Distance = iFrameNum - oFrameNum;
 else
-	Distance = (-1 * iFrameNum) + NDI_MAX_FRAMES - oFrameNum;
+	Distance = (-1 * iFrameNum) + MAX_NDI_FRAMES - oFrameNum;
 
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->bideoFrame2[oFrameNum].p_data != NULL)
 {
@@ -421,7 +424,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->bideo
 	{
 
 		blog(LOG_INFO,
-	     	     "[obs-ndi]NDI is ahead...%d to %d\n",
+	     	     "[obs-ndi]NDI is ahead...%d\n",
 		     Distance);
 		
 		ndiLib->recv_free_video_v2(s->ndi_receiver,
@@ -440,7 +443,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->bideo
 
 	s->videoFrame2[oFrameNum].p_data = NULL;
 
-	s->oFrameNum = (oFrameNum + 1) % NDI_MAX_FRAMES;
+	s->oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
 
 }
 else
@@ -778,7 +781,7 @@ void *ndi_source_thread(void *data)
 					       &config_most_recent.tally);
 		}
 	
-		if (config_most_recent.framesync_enabled) {
+		if !(config_most_recent.framesync_enabled) {
 			
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
@@ -799,15 +802,9 @@ void *ndi_source_thread(void *data)
 				iFrameCnt = (iFrameCnt + 1) % MAX_NDI_FRAMES;
 				
 				ndi_source_thread_process_video2(
-					&config_most_recent, s->vid&video_frame2,
+					&config_most_recent, &video_frame2,
 					obs_source, &obs_video_frame);
 
-				//if (s->pulseSem != NULL)
-				//{
-			   	//	s->pulseFlag = true;
-	              	   	//	os_sem_wait(s->pulseSem);
-				//};	
-				
 				ndiLib->recv_free_video_v2(ndi_receiver,
 							   &video_frame2);
 	
