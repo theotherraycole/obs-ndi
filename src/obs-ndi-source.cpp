@@ -67,6 +67,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOW 1
 #define PROP_LATENCY_LOWEST 2
 
+#define MAX_NDI_FRAMES 30
+#define SYNC_NDI_FRAMES 15;
+
 extern NDIlib_find_instance_t ndi_finder;
 
 typedef struct {
@@ -101,6 +104,11 @@ typedef struct {
 	float   pulse;
 	int64_t frameCnt;
 	char	runState;
+
+	NDIlib_recv_instance_t ndi_receiver;
+	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
+	int oFrameNum;
+	int iFrameNum;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -255,7 +263,7 @@ obs_properties_t *ndi_source_getproperties(void *)
 		return true;
 	});
 
-	obs_property_t *sync_modes = obs_properties_add_list(
+	obs_property_t *_modes = obs_properties_add_list(
 		props, PROP_SYNC, obs_module_text("NDIPlugin.SourceProps.Sync"),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(
@@ -395,21 +403,48 @@ void ndi_source_tick(void *data, float aSecs)
 
 auto s = (ndi_source_t *)data;
 
-if (s->pulse != aSecs)
-    s->pulse = aSecs;
+int	oFrameNum = s->oFrameNum;
+int	iFrameNum = s->iFrameNum;
+int	Distance = 0;
 
-if (s->pulseSem != NULL)
+if (oFrameNum <= iFrameNum)
+	Distance = iFrameNum - oFrameNum;
+else
+	Distance = (-1 * iFrameNum) + NDI_MAX_FRAMES - oFrameNum;
+
+if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->bideoFrame2[oFrameNum].p_data != NULL)
 {
-    if (s->pulseFlag)
-    {
-    	s->pulseFlag = false;
-    	os_sem_post(s->pulseSem);
-	if (s->running)
-		os_sem_wait(s->pulseSem);
-    }	
-    else
-    if (s->frameCnt > 0)
-    {
+
+	obs_source_frame obs_video_frame = {};
+
+	while (Distance > NSYNC_NDI_FRAMES)
+	{
+
+		blog(LOG_INFO,
+	     	     "[obs-ndi]NDI is ahead...%d to %d\n",
+		     Distance);
+		
+		ndiLib->recv_free_video_v2(s->ndi_receiver,
+					   &(s->videoFrame2[oFrameNum]);
+		s->videoFrame2[oFrameNum].p_data = NULL;
+		Distance --;
+		oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+	}
+	
+	ndi_source_thread_process_video2
+		(&s->config, &(s->videoFrame2[oFrameNum]),
+		 s->obs_source, &obs_video_frame);
+				
+	ndiLib->recv_free_video_v2(s->ndi_receiver,
+				   &(s->videoFrame2[oFrameNum]);
+
+	s->videoFrame2[oFrameNum].p_data = NULL;
+
+	s->oFrameNum = (oFrameNum + 1) % NDI_MAX_FRAMES;
+
+}
+else
+{
 	auto obs_source = s->obs_source;
 	QByteArray obs_source_ndi_receiver_name_utf8 =
 		QString(obs_source_get_name(obs_source)).toUtf8();
@@ -421,8 +456,7 @@ if (s->pulseSem != NULL)
 	     obs_source_ndi_receiver_name,
 		s->runState);
 	    
-    };
-}
+};
 
 }
 
@@ -599,8 +633,18 @@ void *ndi_source_thread(void *data)
 				     "[obs-ndi] ndi_source_thread: '%s' ndiLib->recv_destroy(ndi_receiver)",
 				     obs_source_ndi_receiver_name);
 #endif
+				int iCnt = 0;
+				while (iCnt < MAX_NDI_FRAMES)
+				{
+					ndiLib->recv_free_video_v2(s->ndi_receiver,
+				   				   &(s->videoFrame2[iCnt]);
+
+					s->videoFrame2[iCnt].p_data = NULL;
+					iCnt ++;
+				}
 				ndiLib->recv_destroy(ndi_receiver);
 				ndi_receiver = nullptr;
+				s->ndi_receiver = nullptr;
 			}
 #if 1
 			blog(LOG_INFO,
@@ -608,6 +652,7 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name);
 #endif
 			ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
+			s->ndi_receiver = ndi_receiver;
 #if 1
 			blog(LOG_INFO,
 			     "[obs-ndi] ndi_source_thread: '%s' -ndi_receiver = ndiLib->recv_create_v3(&recv_desc)",
@@ -630,8 +675,8 @@ void *ndi_source_thread(void *data)
 				     "[obs-ndi] ndi_source_thread: '%s' +ndi_frame_sync = ndiLib->framesync_create(ndi_receiver)",
 				     obs_source_ndi_receiver_name);
 #endif
-				ndi_frame_sync =
-					ndiLib->framesync_create(ndi_receiver);
+				//ndi_frame_sync =
+				//	ndiLib->framesync_create(ndi_receiver);
 #if 1
 				blog(LOG_INFO,
 				     "[obs-ndi] ndi_source_thread: '%s' -ndi_frame_sync = ndiLib->framesync_create(ndi_receiver); ndi_frame_sync=%p",
@@ -733,97 +778,8 @@ void *ndi_source_thread(void *data)
 					       &config_most_recent.tally);
 		}
 	
-		if (ndi_frame_sync) {
-
-			s->runState = 'x'; // checking Sem
+		if (config_most_recent.framesync_enabled) {
 			
-			if (s->pulseSem != NULL)
-			{
-				// Wait for pulse then rest for 1/4 pulse to (hopefully) be certain we do not
-				// end up adding a frame while rendering.
-				s->runState = 'w'; // sem_wait				
-				s->pulseFlag = true;
-	              		os_sem_wait(s->pulseSem);					
-				//std::this_thread::sleep_for(std::chrono::milliseconds((int) (s->pulse * 250)));
-			};
-
-			s->runState = 'a'; // grab audio
-
-			//
-			// AUDIO
-			//
-			audio_frame2 = {};
-			ndiLib->framesync_capture_audio(
-				ndi_frame_sync, &audio_frame2,
-				0, // "Your desired sample rate. 0 for “use source”."
-				0, // "Your desired channel count. 0 for “use source”."
-				2048);
-			if (audio_frame2.p_data &&
-			    (audio_frame2.timestamp > timestamp_audio)) {
-				//blog(LOG_INFO, "a");//udio_frame";
-				timestamp_audio = audio_frame2.timestamp;
-				ndi_source_thread_process_audio2(
-					&config_most_recent, &audio_frame2,
-					obs_source, &obs_audio_frame);
-			}
-			ndiLib->framesync_free_audio(ndi_frame_sync,
-						     &audio_frame2);
-
-			s->runState = 'v'; // grab video
-
-			//
-			// VIDEO
-			//
-			video_frame2 = {};
-			ndiLib->framesync_capture_video(
-				ndi_frame_sync, &video_frame2,
-				NDIlib_frame_format_type_progressive);
-			if (video_frame2.p_data) { // &&
-			    //(video_frame2.timestamp > timestamp_video)) {
-				//blog(LOG_INFO, "v");//ideo_frame";
-
-				if (timestamp_video == video_frame2.timestamp) // && s->config.tally.on_program)
-					blog(LOG_INFO,
-				           "[obs-ndi] ndi_source_thread: %s last frame duplicated",
-				     	   obs_source_ndi_receiver_name);	
-				
-				timestamp_video = video_frame2.timestamp;
-
-				s->runState = 'p'; // processing
-				
-				ndi_source_thread_process_video2(
-					&config_most_recent, &video_frame2,
-					obs_source, &obs_video_frame);
-
-				s->frameCnt ++;
-			}
-			else
-			{
-				if (s->config.tally.on_program)
-				{
-					blog(LOG_INFO,
-					     "[obs-ndi] ndi_source_thread: %s Is live but new frame unavailable",
-					     obs_source_ndi_receiver_name);
-				}
-
-				s->frameCnt ++;
-
-			}
-
-			if (s->pulseSem != NULL)
-			{
-				// Let tick thread know we finished
-				//s->pulseFlag = true;
-				s->runState = 'd'; // we are done
-	              		os_sem_post(s->pulseSem);					
-			};
-
-			s->runState = 'f'; // we are freeing
-
-			ndiLib->framesync_free_video(ndi_frame_sync,
-						     &video_frame2);
-			
-		} else {
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
 								 &audio_frame3,
@@ -839,8 +795,11 @@ void *ndi_source_thread(void *data)
 			}
 
 			if (frame_received == NDIlib_frame_type_video) {
+
+				iFrameCnt = (iFrameCnt + 1) % MAX_NDI_FRAMES;
+				
 				ndi_source_thread_process_video2(
-					&config_most_recent, &video_frame2,
+					&config_most_recent, s->vid&video_frame2,
 					obs_source, &obs_video_frame);
 
 				//if (s->pulseSem != NULL)
@@ -851,6 +810,43 @@ void *ndi_source_thread(void *data)
 				
 				ndiLib->recv_free_video_v2(ndi_receiver,
 							   &video_frame2);
+	
+				continue;
+			}
+			else {
+				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
+	     				obs_source_ndi_receiver_name);
+			}
+			s->runState = 'f'; // we are freeing
+
+			
+		} else {
+
+			s->iFrameNum = (s->iFrameNum + 1) % MAX_NDI_FRAMES;
+
+			if (s->videoFrame2[s->iFrameNum].p_data != NULL)
+
+				continue;
+							
+			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
+								 &(s->videoFrame2[s->iFrameNum]),
+								 nullptr,
+								 nullptr, 1000);
+	
+			if (frame_received == NDIlib_frame_type_video) {
+				
+				//ndi_source_thread_process_video2(
+				//	&config_most_recent, &video_frame2,
+				//	obs_source, &obs_video_frame);
+
+				//if (s->pulseSem != NULL)
+				//{
+			   	//	s->pulseFlag = true;
+	              	   	//	os_sem_wait(s->pulseSem);
+				//};	
+				
+				//ndiLib->recv_free_video_v2(ndi_receiver,
+				//			   &video_frame2);
 	
 				continue;
 			}
