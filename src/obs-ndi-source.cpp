@@ -640,7 +640,7 @@ void *ndi_source_thread(void *data)
 				while (iCnt < MAX_NDI_FRAMES)
 				{
 					ndiLib->recv_free_video_v2(s->ndi_receiver,
-				   				   &(s->videoFrame2[iCnt]);
+				   				   &(s->videoFrame2[iCnt]));
 
 					s->videoFrame2[iCnt].p_data = NULL;
 					iCnt ++;
@@ -781,7 +781,7 @@ void *ndi_source_thread(void *data)
 					       &config_most_recent.tally);
 		}
 	
-		if !(config_most_recent.framesync_enabled) {
+		if (!config_most_recent.framesync_enabled) {
 			
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
