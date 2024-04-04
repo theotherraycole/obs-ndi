@@ -109,6 +109,7 @@ typedef struct {
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
 	int oFrameNum;
 	int iFrameNum;
+        int iLowBacklog;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -431,6 +432,14 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		Distance --;			// give it some slack...
 		liveStatus = " - LIVE!";
 	};
+
+	if (Distance < s->iLowBacklog || s->iBacklog == 0)
+	{
+		blog(LOG_INFO,
+	     	    "[obs-ndi] ndi_source_thread: Low backlog of %d",
+		    s->iLowBacklog);
+		s->iLowBacklog = Distance;
+	}
 	
 	if (Distance > NSYNC_NDI_FRAMES)
 	{
@@ -478,6 +487,7 @@ if (s->frameCnt > NSYNC_NDI_FRAMES)
 		obs_source_ndi_receiver_name_utf8.constData();
 
 	s->frameCnt = 0;  // wait for buffer to build back
+	s->iLowBacklog = 0; // we ran out of backlog
 	
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame (%d %d), state %c.",
@@ -528,6 +538,7 @@ void *ndi_source_thread(void *data)
 
 	s->runState = 'S'; // sleeping
 	s->pulse = 1;
+	s->iBacklog = 0;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
