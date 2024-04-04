@@ -798,8 +798,6 @@ void *ndi_source_thread(void *data)
 			}
 
 			if (frame_received == NDIlib_frame_type_video) {
-
-				iFrameCnt = (iFrameCnt + 1) % MAX_NDI_FRAMES;
 				
 				ndi_source_thread_process_video2(
 					&config_most_recent, &video_frame2,
