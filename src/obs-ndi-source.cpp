@@ -439,7 +439,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		 s->obs_source, &obs_video_frame);
 				
 	ndiLib->recv_free_video_v2(s->ndi_receiver,
-				   &(s->videoFrame2[oFrameNum]);
+				   &(s->videoFrame2[oFrameNum]));
 
 	s->videoFrame2[oFrameNum].p_data = NULL;
 
