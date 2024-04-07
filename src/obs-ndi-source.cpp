@@ -425,6 +425,12 @@ if (Distance > NSYNC_NDI_FRAMES)
 else
 	s->iHighCnt = 0;
 
+if ((s->frameCnt % 30) == 120)
+	blog(LOG_INFO,
+	     "[obs-ndi] ndi_source_thread: Backlog %d, HighCnt %d",
+	     (int) Distance,
+	     (int) s->iLowBacklog);
+
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
 
