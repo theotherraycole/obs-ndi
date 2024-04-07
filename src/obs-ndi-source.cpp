@@ -110,6 +110,7 @@ typedef struct {
 	int oFrameNum;
 	int iFrameNum;
         int iLowBacklog;
+	int iHighCnt;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -440,8 +441,14 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		    s->iLowBacklog);
 		s->iLowBacklog = Distance;
 	}
-	
+
 	if (Distance > NSYNC_NDI_FRAMES)
+		s->iHighCnt ++;
+	else
+		s->iHightCnt = 0;
+	
+	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
+	    (Distance > (NSYNC_NDI_FRAMES + 2)))                  // but don't be stupid about it, either...
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
