@@ -445,7 +445,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	if (Distance > NSYNC_NDI_FRAMES)
 		s->iHighCnt ++;
 	else
-		s->iHightCnt = 0;
+		s->iHighCnt = 0;
 	
 	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
 	    (Distance > (NSYNC_NDI_FRAMES + 2)))                  // but don't be stupid about it, either...
