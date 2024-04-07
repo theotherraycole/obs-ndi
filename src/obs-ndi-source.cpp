@@ -425,7 +425,7 @@ if (Distance > NSYNC_NDI_FRAMES)
 else
 	s->iHighCnt = 0;
 
-if ((s->frameCnt % 30) == 120)
+if ((s->frameCnt % (60 * 30)) == 0)
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_thread: Backlog %d, HighCnt %d",
 	     (int) Distance,
