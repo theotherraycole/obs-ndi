@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define MAX_NDI_FRAMES 30
-#define NSYNC_NDI_FRAMES 15
+#define NSYNC_NDI_FRAMES 10
 
 extern NDIlib_find_instance_t ndi_finder;
 
