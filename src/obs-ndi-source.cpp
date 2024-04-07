@@ -420,6 +420,11 @@ if (oFrameNum <= iFrameNum)
 else
 	Distance = (iFrameNum + MAX_NDI_FRAMES) - oFrameNum;
 
+if (Distance > NSYNC_NDI_FRAMES)
+	s->iHighCnt ++;
+else
+	s->iHighCnt = 0;
+
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
 
@@ -441,11 +446,6 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		    s->iLowBacklog);
 		s->iLowBacklog = Distance;
 	}
-
-	if (Distance > NSYNC_NDI_FRAMES)
-		s->iHighCnt ++;
-	else
-		s->iHighCnt = 0;
 	
 	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
 	    (Distance > (NSYNC_NDI_FRAMES + 2)))                  // but don't be stupid about it, either...
