@@ -107,8 +107,8 @@ typedef struct {
 
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
-	int oFrameNum;
-	int iFrameNum;
+	long oFrameNum;
+	long iFrameNum;
         int iLowBacklog;
 	int iHighCnt;
 } ndi_source_t;
@@ -405,12 +405,17 @@ void ndi_source_tick(void *data, float aSecs)
 
 auto s = (ndi_source_t *)data;
 
-int	oFrameNum = s->oFrameNum;
-int	iFrameNum = s->iFrameNum;
+int	oFrameNum = os_atomic_load_long(&s->oFrameNum);
+int	iFrameNum = os_atomic_load_long(&s->iFrameNum);
 int	Distance = 0;
 
 if (s->pulse != aSecs)
+{
    s->pulse = aSecs;
+   blog(LOG_INFO,
+        "[obs-ndi] ndi_source_thread: Pulse changed to %f",
+        aSecs);        
+};
 	
 if (!s->pulseFlag)
 	return;
@@ -431,7 +436,7 @@ if ((s->frameCnt % (60 * 30)) == 0)
 	     (int) Distance,
 	     (int) s->iHighCnt);
 
-if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
+if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[o].p_data != NULL)
 {
 
 	obs_source_frame obs_video_frame = {};
@@ -449,11 +454,10 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	{
 		blog(LOG_INFO,
 	     	    "[obs-ndi] ndi_source_thread: Low backlog of %d",
-		    s->iLowBacklog);
+		    Distance);
 		s->iLowBacklog = Distance;
 	}
 
-#ifdef _SRC_	
 	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
 	    (Distance > (NSYNC_NDI_FRAMES + 2)))                  // but don't be stupid about it, either...
 	{
@@ -472,16 +476,16 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 			     liveStatus);
 		
 			ndiLib->recv_free_video_v2(s->ndi_receiver,
-						   &(s->videoFrame2[oFrameNum]));
-			s->videoFrame2[oFrameNum].p_data = NULL;
+						   &(s->videoFrame2[o]));
+			s->videoFrame2[o].p_data = NULL;
 			Distance --;
-			oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+			o = (o + 1) % MAX_NDI_FRAMES;
 		}
 	}
 #endif
 	
 	ndi_source_thread_process_video2
-		(&s->config, &(s->videoFrame2[oFrameNum]),
+		(&s->config, &(s->videoFrame2[o]),
 		 s->obs_source, &obs_video_frame);
 				
 	ndiLib->recv_free_video_v2(s->ndi_receiver,
@@ -489,7 +493,9 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 
 	s->videoFrame2[oFrameNum].p_data = NULL;
 
-	s->oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+	oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+
+	as_atomic_store_long(&s->oFrameNum, oFrameNum);
 
 }
 else
@@ -507,8 +513,8 @@ if (s->frameCnt > NSYNC_NDI_FRAMES)
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame (%d %d), state %c.",
 	     obs_source_ndi_receiver_name,
-		s->iFrameNum,
-		s->oFrameNum,
+		iFrameNum,
+		oFrameNum,
 		s->runState);
 	    
 };
@@ -545,6 +551,7 @@ void *ndi_source_thread(void *data)
 	NDIlib_audio_frame_v2_t audio_frame2;
 	int64_t timestamp_audio = 0;
 	int64_t timestamp_video = 0;
+	long	iFrameNum = 0;
 
 	NDIlib_audio_frame_v3_t audio_frame3;
 	NDIlib_frame_type_e frame_received = NDIlib_frame_type_none;
@@ -878,19 +885,23 @@ void *ndi_source_thread(void *data)
 
 			
 		} else {
+
+			iFrameNum = os_atomic_load_long(&s->iFrameNum);
 			
-			if (s->videoFrame2[s->iFrameNum].p_data != NULL)
+			if (s->videoFrame2[iFrameNum].p_data != NULL)
 
 				continue;
 							
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
-								 &(s->videoFrame2[s->iFrameNum]),
+								 &(s->videoFrame2[iFrameNum]),
 								 nullptr,
 								 nullptr, 1000);
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
-				s->iFrameNum = (s->iFrameNum + 1) % MAX_NDI_FRAMES;
+				iFrameNum = iFrameNum + 1) % MAX_NDI_FRAMES;
+
+				as_atomic_store_long(&s->iFrameNum, iFrame);
 
 				s->frameCnt ++;
 	
