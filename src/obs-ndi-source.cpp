@@ -494,7 +494,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 
 	oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
 
-	as_atomic_store_long(&s->oFrameNum, oFrameNum);
+	os_atomic_store_long(&s->oFrameNum, oFrameNum);
 
 }
 else
@@ -900,7 +900,7 @@ void *ndi_source_thread(void *data)
 				
 				iFrameNum = iFrameNum + 1) % MAX_NDI_FRAMES;
 
-				as_atomic_store_long(&s->iFrameNum, iFrame);
+				os_atomic_store_long(&s->iFrameNum, iFrame);
 
 				s->frameCnt ++;
 	
