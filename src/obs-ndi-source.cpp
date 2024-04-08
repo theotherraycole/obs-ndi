@@ -452,7 +452,8 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		    s->iLowBacklog);
 		s->iLowBacklog = Distance;
 	}
-	
+
+#ifdef _SRC_	
 	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
 	    (Distance > (NSYNC_NDI_FRAMES + 2)))                  // but don't be stupid about it, either...
 	{
@@ -477,6 +478,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 			oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
 		}
 	}
+#endif
 	
 	ndi_source_thread_process_video2
 		(&s->config, &(s->videoFrame2[oFrameNum]),
