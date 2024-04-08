@@ -898,9 +898,9 @@ void *ndi_source_thread(void *data)
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
-				iFrameNum = iFrameNum + 1) % MAX_NDI_FRAMES;
+				iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
-				os_atomic_store_long(&s->iFrameNum, iFrame);
+				os_atomic_store_long(&s->iFrameNum, iFrameNum);
 
 				s->frameCnt ++;
 	
