@@ -436,7 +436,7 @@ if ((s->frameCnt % (60 * 30)) == 0)
 	     (int) Distance,
 	     (int) s->iHighCnt);
 
-if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[o].p_data != NULL)
+if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
 
 	obs_source_frame obs_video_frame = {};
@@ -476,16 +476,15 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 			     liveStatus);
 		
 			ndiLib->recv_free_video_v2(s->ndi_receiver,
-						   &(s->videoFrame2[o]));
-			s->videoFrame2[o].p_data = NULL;
+						   &(s->videoFrame2[oFrameNum]));
+			s->videoFrame2[oFrameNum].p_data = NULL;
 			Distance --;
-			o = (o + 1) % MAX_NDI_FRAMES;
+			oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
 		}
 	}
-#endif
 	
 	ndi_source_thread_process_video2
-		(&s->config, &(s->videoFrame2[o]),
+		(&s->config, &(s->videoFrame2[oFrameNum]),
 		 s->obs_source, &obs_video_frame);
 				
 	ndiLib->recv_free_video_v2(s->ndi_receiver,
