@@ -764,22 +764,6 @@ void *ndi_source_thread(void *data)
 			}
 		}
 		
-		s->runState = 'n'; // checking num connections
-		
-		if (!config_most_recent.framesync_enabled && ndiLib->recv_get_no_connections(ndi_receiver) == 0)
-		{
-
-			if (s->frameCnt != 0)
-				
-				blog(LOG_INFO,
-				     "[obs-ndi] ndi_source_thread: '%s' Dropped connection???",
-			     		obs_source_ndi_receiver_name);
-			
-			std::this_thread::sleep_for(
-				std::chrono::milliseconds(10));
-			continue;
-		}
-
 		s->runState = 'h'; // checking hw accel
 		
 		if (config_most_recent.hw_accel_enabled !=
