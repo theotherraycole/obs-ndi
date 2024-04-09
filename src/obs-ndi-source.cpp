@@ -405,8 +405,8 @@ void ndi_source_tick(void *data, float aSecs)
 
 auto s = (ndi_source_t *)data;
 
-int	oFrameNum = os_atomic_load_long(&s->oFrameNum);
-int	iFrameNum = os_atomic_load_long(&s->iFrameNum);
+int	oFrameNum = (int) os_atomic_load_long(&s->oFrameNum);
+int	iFrameNum = (int) os_atomic_load_long(&s->iFrameNum);
 int	Distance = 0;
 
 if (s->pulse != aSecs)
@@ -838,7 +838,7 @@ void *ndi_source_thread(void *data)
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
 								 &audio_frame3,
-								 nullptr, (int) (1 / s->pulse) * 1000);
+								 nullptr, (int) (s->pulse * 1000));
 
 			if (frame_received == NDIlib_frame_type_audio) {
 				ndi_source_thread_process_audio3(
@@ -883,7 +883,7 @@ void *ndi_source_thread(void *data)
 								 &(s->videoFrame2[iFrameNum]),
 								 nullptr,
 								 nullptr, 
-								 (int) (1 / s->pulse) * 1000);
+								 (int) (s->pulse * 1000));
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
@@ -895,6 +895,11 @@ void *ndi_source_thread(void *data)
 	
 				continue;
 			};
+
+			if (frame_received == NDIlib_frame_type_status_change) {
+				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) has received a change notification",
+	     				obs_source_ndi_receiver_name);
+			}
 			
 			if (frame_received == NDIlib_frame_type_none) {
 				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
