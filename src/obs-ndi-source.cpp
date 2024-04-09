@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define MAX_NDI_FRAMES 30
-#define NSYNC_NDI_FRAMES 15
+#define NSYNC_NDI_FRAMES 4
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -878,7 +878,8 @@ void *ndi_source_thread(void *data)
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &(s->videoFrame2[iFrameNum]),
 								 nullptr,
-								 nullptr, 1000);
+								 nullptr, 
+								 (1 / s->pulse) * 1000);
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
