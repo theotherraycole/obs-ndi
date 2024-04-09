@@ -860,6 +860,9 @@ void *ndi_source_thread(void *data)
 	
 				continue;
 			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
 			//else {
 			//	blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
 	     		//		obs_source_ndi_receiver_name);
