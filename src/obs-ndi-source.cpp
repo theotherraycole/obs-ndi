@@ -861,7 +861,8 @@ void *ndi_source_thread(void *data)
 				continue;
 			}
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			if (frame_received == NDIlib_frame_type_none)
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 			//else {
 			//	blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
@@ -882,7 +883,7 @@ void *ndi_source_thread(void *data)
 								 &(s->videoFrame2[iFrameNum]),
 								 nullptr,
 								 nullptr, 
-								 (1 / s->pulse) * 1000);
+								 (int) (1 / s->pulse) * 1000);
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
@@ -893,8 +894,9 @@ void *ndi_source_thread(void *data)
 				s->frameCnt ++;
 	
 				continue;
-			}
-			else {
+			};
+			
+			if (frame_received == NDIlib_frame_type_none) {
 				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
 	     				obs_source_ndi_receiver_name);
 			}
