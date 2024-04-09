@@ -436,6 +436,9 @@ if ((s->frameCnt % (60 * 30)) == 0)
 	     (int) Distance,
 	     (int) s->iHighCnt);
 
+if (s->videoFrame2[oFrameNum].p_data != NULL)
+	s->frameCnt ++;
+	
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
 
@@ -832,6 +835,8 @@ void *ndi_source_thread(void *data)
 			ndiLib->recv_set_tally(ndi_receiver,
 					       &config_most_recent.tally);
 		}
+
+		s->runState = 'c'; // capturing
 	
 		if (!config_most_recent.framesync_enabled) {
 			
@@ -891,8 +896,6 @@ void *ndi_source_thread(void *data)
 				iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
 				os_atomic_store_long(&s->iFrameNum, iFrameNum);
-
-				s->frameCnt ++;
 	
 				continue;
 			};
