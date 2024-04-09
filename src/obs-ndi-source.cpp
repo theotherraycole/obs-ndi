@@ -838,7 +838,8 @@ void *ndi_source_thread(void *data)
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
 								 &audio_frame3,
-								 nullptr, (int) (s->pulse * 1000));
+								 nullptr,
+								 250);
 
 			if (frame_received == NDIlib_frame_type_audio) {
 				ndi_source_thread_process_audio3(
@@ -883,7 +884,7 @@ void *ndi_source_thread(void *data)
 								 &(s->videoFrame2[iFrameNum]),
 								 nullptr,
 								 nullptr, 
-								 (int) (s->pulse * 1000));
+								 250);
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
