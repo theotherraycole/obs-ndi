@@ -459,12 +459,12 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	     	//    "[obs-ndi] ndi_source_thread: Low backlog of %d",
 		//    Distance);
 		s->iLowBacklog = Distance;
-		s->i ++;
+		s->iLowCnt ++;
 	}
 	else
-		s->i = 0;
+		s->iLowCnt = 0;
 
-	if (s->i > 4)
+	if (s->iLowCnt > 4)
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
