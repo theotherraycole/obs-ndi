@@ -111,6 +111,7 @@ typedef struct {
 	long iFrameNum;
         int iLowBacklog;
 	int iHighCnt;
+	int iLowCnt;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -455,10 +456,33 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 
 	if (Distance < s->iLowBacklog || s->iLowBacklog == 0)
 	{
-		blog(LOG_INFO,
-	     	    "[obs-ndi] ndi_source_thread: Low backlog of %d",
-		    Distance);
+		//blog(LOG_INFO,
+	     	//    "[obs-ndi] ndi_source_thread: Low backlog of %d",
+		//    Distance);
 		s->iLowBacklog = Distance;
+		s->iLowCnt ++;
+	}
+	else
+		s->iLowCnt = 0;
+
+	if (s->iLowCnt > 4)
+	{
+		auto obs_source = s->obs_source;
+		QByteArray obs_source_ndi_receiver_name_utf8 =
+			QString(obs_source_get_name(obs_source)).toUtf8();
+		obs_source_ndi_receiver_name =
+			obs_source_ndi_receiver_name_utf8.constData();
+		
+		while (Distance > NSYNC_NDI_FRAMES)
+		{
+			blog(LOG_INFO,
+	     	     	     "[obs-ndi] ndi_source_thread: '%s' is behind...%d - Duplicating frame %s",
+		     	     obs_source_ndi_receiver_name,
+			     Distance,
+			     liveStatus);
+		
+			return;
+		}
 	}
 
 	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
