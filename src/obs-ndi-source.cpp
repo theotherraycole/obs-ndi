@@ -459,12 +459,12 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	     	//    "[obs-ndi] ndi_source_thread: Low backlog of %d",
 		//    Distance);
 		s->iLowBacklog = Distance;
-		s->iLowCnt ++;
+		s->i ++;
 	}
 	else
-		s->iLowCnt = 0;
+		s->i = 0;
 
-	if (s->iLowCnt > 4)
+	if (s->i > 4)
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
@@ -1112,7 +1112,7 @@ void ndi_source_thread_start(ndi_source_t *s)
 {
 	s->pulseFlag = false;
 	s->frameCnt = 0;
-	s->highCnt = s->lowCnt = 0;
+	s->iHighCnt = s->iLowCnt = 0;
 	s->running = true;
 	
 	pthread_attr_t threadAttr;
