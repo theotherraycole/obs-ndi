@@ -96,7 +96,6 @@ typedef struct {
 
 typedef struct {
 	obs_source_t *obs_source;
-	os_sem_t *pulseSem;
 	ndi_source_config_t config;
 	bool pulseFlag;
 	bool running;
@@ -414,7 +413,7 @@ if (s->pulse != aSecs)
 {
    s->pulse = aSecs;
    blog(LOG_INFO,
-        "[obs-ndi] ndi_source_thread: Pulse changed to %f",
+        "[obs-ndi] ndi_source_tick: Pulse changed to %f",
         aSecs);        
 };
 	
@@ -434,11 +433,11 @@ else
 if (s->videoFrame2[oFrameNum].p_data != NULL)
 	s->frameCnt ++;
 	
-if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
-	blog(LOG_INFO,
-	     "[obs-ndi] ndi_source_thread: Backlog %d, HighCnt %d",
-	     (int) Distance,
-	     (int) s->iHighCnt);
+//if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
+//	blog(LOG_INFO,
+//	     "[obs-ndi] ndi_source_tick: Backlog %d, HighCnt %d",
+//	     (int) Distance,
+//	     (int) s->iHighCnt);
 	
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
 {
@@ -476,7 +475,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		while (Distance > NSYNC_NDI_FRAMES)
 		{
 			blog(LOG_INFO,
-	     	     	     "[obs-ndi] ndi_source_thread: '%s' is behind...%d - Duplicating frame %s",
+	     	     	     "[obs-ndi] ndi_source_tick: '%s' is behind...%d - Duplicating frame %s",
 		     	     obs_source_ndi_receiver_name,
 			     Distance,
 			     liveStatus);
@@ -497,7 +496,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		while (Distance > NSYNC_NDI_FRAMES)
 		{
 			blog(LOG_INFO,
-	     	     	     "[obs-ndi] ndi_source_thread: '%s' is ahead...%d - Dropping frame %s",
+	     	     	     "[obs-ndi] ndi_source_tick: '%s' is ahead...%d - Dropping frame %s",
 		     	     obs_source_ndi_receiver_name,
 			     Distance,
 			     liveStatus);
@@ -537,7 +536,7 @@ if (s->frameCnt > NSYNC_NDI_FRAMES)
 	s->iLowBacklog = 0; // we ran out of backlog
 	
 	blog(LOG_INFO,
-	     "[obs-ndi] ndi_source_thread: '%s' did not provide a frame (%d %d), state %c.",
+	     "[obs-ndi] ndi_source_tick: '%s' did not provide a frame (%d %d), state %c.",
 	     obs_source_ndi_receiver_name,
 		iFrameNum,
 		oFrameNum,
@@ -1113,10 +1112,19 @@ void ndi_source_thread_start(ndi_source_t *s)
 {
 	s->pulseFlag = false;
 	s->frameCnt = 0;
-        os_sem_init(&s->pulseSem, 0);
-	
+	s->highCnt = s->lowCnt = 0;
 	s->running = true;
-	pthread_create(&s->av_thread, nullptr, ndi_source_thread, s);
+	
+	pthread_attr_t threadAttr;
+	struct sched_param threadSched;
+
+	pthread_attr_init(&threadAttr);
+	threadSched.sched_priority = sched_get_priority_max(SCHED_OTHER);
+	pthread_attr_setschedpolicy(&threadAttr, SCHED_OTHER);
+	pthread_attr_setschedparam(&threadAttr, &threadSched);
+	pthread_attr_setinheritsched(&threadAttr, PTHREAD_EXPLICIT_SCHED);
+	pthread_create(&s->av_thread, &threadAttr, ndi_source_thread, s);
+	pthread_attr_destroy(&threadAttr);
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_thread_start: '%s' Started A/V ndi_source_thread for NDI source '%s'",
 	     s->config.ndi_receiver_name.constData(),
@@ -1127,10 +1135,7 @@ void ndi_source_thread_stop(ndi_source_t *s)
 {
 	if (s->running) {
 		s->running = false;
-  		if (s->pulseSem != NULL) os_sem_post(s->pulseSem);
 		pthread_join(s->av_thread, NULL);
-		if (s->pulseSem != NULL) os_sem_destroy(s->pulseSem);
-		s->pulseSem = NULL;
 	}
 }
 
