@@ -538,7 +538,7 @@ if (s->frameCnt > NSYNC_NDI_FRAMES)
 	NDIlib_recv_performance_t perfTotal;
 	NDIlib_recv_performance_t perfDropped;
 	
-	NDIlib_recv_get_performance(s->ndi_receiver, &perfTotal, &perfDropped);	
+	ndiLib->recv_get_performance(s->ndi_receiver, &perfTotal, &perfDropped);	
 	
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_tick: '%s' did not provide a frame (%d of %d dropped), state %c.",
