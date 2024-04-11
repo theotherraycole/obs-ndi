@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define MAX_NDI_FRAMES 30
-#define NSYNC_NDI_FRAMES 3
+#define NSYNC_NDI_FRAMES 4
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -917,7 +917,7 @@ void *ndi_source_thread(void *data)
 								 &(s->videoFrame2[iFrameNum]),
 								 nullptr,
 								 nullptr, 
-								 250);
+								 100);
 	
 			if (frame_received == NDIlib_frame_type_video) {
 				
