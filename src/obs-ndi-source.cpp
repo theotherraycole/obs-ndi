@@ -534,12 +534,17 @@ if (s->frameCnt > NSYNC_NDI_FRAMES)
 
 	s->frameCnt = 0;  // wait for buffer to build back
 	s->iLowBacklog = 0; // we ran out of backlog
+
+	NDIlib_recv_performance_t perfTotal;
+	NDIlib_recv_performance_t perfDropped;
+	
+	NDIlib_recv_get_performance(s->ndi_receiver, &perfTotal, &perfDropped);	
 	
 	blog(LOG_INFO,
-	     "[obs-ndi] ndi_source_tick: '%s' did not provide a frame (%d %d), state %c.",
+	     "[obs-ndi] ndi_source_tick: '%s' did not provide a frame (%d of %d dropped), state %c.",
 	     obs_source_ndi_receiver_name,
-		iFrameNum,
-		oFrameNum,
+		(int) perfDropped.video_frames,
+		(int) perfTotal.video_frames,
 		s->runState);
 	    
 };
