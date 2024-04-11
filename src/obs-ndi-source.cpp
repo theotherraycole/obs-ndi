@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define MAX_NDI_FRAMES 30
-#define NSYNC_NDI_FRAMES 2
+#define NSYNC_NDI_FRAMES 3
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -872,7 +872,7 @@ void *ndi_source_thread(void *data)
 								 &video_frame2,
 								 &audio_frame3,
 								 nullptr,
-								 250);
+								 100);
 
 			if (frame_received == NDIlib_frame_type_audio) {
 				ndi_source_thread_process_audio3(
