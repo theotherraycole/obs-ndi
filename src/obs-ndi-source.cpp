@@ -67,8 +67,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOW 1
 #define PROP_LATENCY_LOWEST 2
 
-#define MAX_NDI_FRAMES 30
 #define NSYNC_NDI_FRAMES 5
+#define MAX_NDI_FRAMES (NSYNC_NDI_FRAMES + 3)
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -420,7 +420,7 @@ if (s->pulse != aSecs)
 if (!s->pulseFlag)
 	return;
 
-if (oFrameNum <= iFrameNum)
+if (oFrameNum < iFrameNum)
 	Distance = iFrameNum - oFrameNum;
 else
 	Distance = (iFrameNum + MAX_NDI_FRAMES) - oFrameNum;
