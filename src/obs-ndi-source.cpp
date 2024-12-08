@@ -103,6 +103,7 @@ typedef struct {
 	float   pulse;
 	int64_t frameCnt;
 	char	runState;
+        char    capType;
 
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
@@ -432,6 +433,9 @@ else
 
 if (s->videoFrame2[oFrameNum].p_data != NULL)
 	s->frameCnt ++;
+
+if (s->capType == 'f')
+	return;
 	
 //if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
 //	blog(LOG_INFO,
@@ -589,6 +593,7 @@ void *ndi_source_thread(void *data)
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
 
 	s->runState = 'S'; // sleeping
+        s->capType = 0;
 	s->pulse = 1;
 	s->iLowBacklog = 0;
 
@@ -762,12 +767,15 @@ void *ndi_source_thread(void *data)
 				     recv_desc.source_to_connect_to.p_ndi_name);
 				break;
 			}
+
+			s->capType = 0;
 			
 			if (config_most_recent.framesync_enabled) {
 				timestamp_audio = 0;
 				timestamp_video = 0;
 
 				s->pulseFlag = true;
+			        s->capType = 'f';
 
 #if 1
 				blog(LOG_INFO,
