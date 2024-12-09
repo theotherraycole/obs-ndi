@@ -1137,7 +1137,7 @@ void ndi_source_thread_start(ndi_source_t *s)
 	
 	pthread_attr_t threadAttr;
 	struct sched_param threadSched;
-	os_sem_create(&s->syncSem, 0);
+	os_sem_init(&s->syncSem, 0);
 
 	pthread_attr_init(&threadAttr);
 	threadSched.sched_priority = sched_get_priority_max(SCHED_OTHER);
