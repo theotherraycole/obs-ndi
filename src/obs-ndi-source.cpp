@@ -107,6 +107,7 @@ typedef struct {
 
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
+        os_sem_t syncSem;
 	long oFrameNum;
 	long iFrameNum;
         int iLowBacklog;
@@ -427,7 +428,10 @@ else
 	Distance = (iFrameNum + MAX_NDI_FRAMES) - oFrameNum;
 
 if (s->capType == 'f')
+{
+    os_sem_give(s->syncSem);	
     Distance = NSYNC_NDI_FRAMES;
+};
 	
 if (Distance > NSYNC_NDI_FRAMES)
 	s->iHighCnt ++;
@@ -876,6 +880,8 @@ void *ndi_source_thread(void *data)
 		s->runState = 'c'; // capturing
 	
 		if (!config_most_recent.framesync_enabled) {
+
+			os_sem_take_timeout(s->syncSem, 100000);
 			
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
@@ -1131,6 +1137,7 @@ void ndi_source_thread_start(ndi_source_t *s)
 	
 	pthread_attr_t threadAttr;
 	struct sched_param threadSched;
+	s->syncSem = os_sem_create(0);
 
 	pthread_attr_init(&threadAttr);
 	threadSched.sched_priority = sched_get_priority_max(SCHED_OTHER);
@@ -1150,6 +1157,7 @@ void ndi_source_thread_stop(ndi_source_t *s)
 	if (s->running) {
 		s->running = false;
 		pthread_join(s->av_thread, NULL);
+		os_sem_destroy(s->syncSem);
 	}
 }
 
