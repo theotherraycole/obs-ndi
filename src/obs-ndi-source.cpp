@@ -441,11 +441,11 @@ else
 if (s->videoFrame2[oFrameNum].p_data != NULL)
 	s->frameCnt ++;
 
-//if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
-//	blog(LOG_INFO,
-//	     "[obs-ndi] ndi_source_tick: Backlog %d, HighCnt %d",
-//	     (int) Distance,
-//	     (int) s->iHighCnt);
+if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
+	blog(LOG_INFO,
+	     "[obs-ndi] ndi_source_tick: Backlog %d, HighCnt %d",
+	     (int) Distance,
+	     (int) s->iHighCnt);
 
 	
 if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->videoFrame2[oFrameNum].p_data != NULL)
