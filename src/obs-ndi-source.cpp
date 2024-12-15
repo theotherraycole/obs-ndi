@@ -884,7 +884,7 @@ void *ndi_source_thread(void *data)
 	
 		if (!config_most_recent.framesync_enabled) {
 
-			os_sem_wait(s->syncSem);
+			//os_sem_wait(s->syncSem);
 			
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
