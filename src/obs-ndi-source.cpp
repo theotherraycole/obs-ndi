@@ -774,6 +774,9 @@ void *ndi_source_thread(void *data)
 			}
 
 			s->capType = 0;
+		
+                        if (!config_most_recent.framesync_enabled)
+				s->pulseFlag = true;
 			
 			if (config_most_recent.framesync_enabled) {
 				timestamp_audio = 0;
