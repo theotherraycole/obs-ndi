@@ -790,8 +790,8 @@ void *ndi_source_thread(void *data)
 				     "[obs-ndi] ndi_source_thread: '%s' +ndi_frame_sync = ndiLib->framesync_create(ndi_receiver)",
 				     obs_source_ndi_receiver_name);
 #endif
-				//ndi_frame_sync =
-				//	ndiLib->framesync_create(ndi_receiver);
+				ndi_frame_sync =
+					ndiLib->framesync_create(ndi_receiver);
 #if 1
 				blog(LOG_INFO,
 				     "[obs-ndi] ndi_source_thread: '%s' -ndi_frame_sync = ndiLib->framesync_create(ndi_receiver); ndi_frame_sync=%p",
