@@ -439,6 +439,10 @@ if (Distance > NSYNC_NDI_FRAMES)
 else
 	s->iHighCnt = 0;
 
+blog(LOG_INFO,
+     "[obs-ndi] ndi_source_tick: Distance %d",
+     (int) Distance);     
+
 if (s->videoFrame2[oFrameNum].p_data != NULL)
 	s->frameCnt ++;
 
