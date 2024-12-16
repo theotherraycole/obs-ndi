@@ -423,7 +423,7 @@ if (s->pulse != aSecs)
 if (!s->pulseFlag)
 	return;
 
-if (oFrameNum < iFrameNum)
+if (oFrameNum <= iFrameNum)
 	Distance = iFrameNum - oFrameNum;
 else
 	Distance = (iFrameNum + MAX_NDI_FRAMES) - oFrameNum;
