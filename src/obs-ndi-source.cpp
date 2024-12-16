@@ -597,11 +597,11 @@ void *ndi_source_thread(void *data)
 	NDIlib_metadata_frame_t metadata_frame;
 	NDIlib_framesync_instance_t ndi_frame_sync = nullptr;
 	NDIlib_audio_frame_v2_t audio_frame2;
+	NDIlib_audio_frame_v3_t audio_frame3;
 	int64_t timestamp_audio = 0;
 	int64_t timestamp_video = 0;
 	long	iFrameNum = 0;
 
-	NDIlib_audio_frame_v3_t audio_frame3;
 	NDIlib_frame_type_e frame_received = NDIlib_frame_type_none;
 
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
@@ -968,14 +968,14 @@ void *ndi_source_thread(void *data)
 			os_atomic_store_long(&s->iFrameNum, iFrameNum);
 
 			ndiLib->framesync_capture_audio(s->ndi_fsync,
-			   				*audio_frame3,48000,2,
+			   				*audio_frame2,48000,2,
 							48000 / (1.0 / s->pulse));
 					
-			ndi_source_thread_process_audio3(&config_most_recent, &audio_frame3,
+			ndi_source_thread_process_audio2(&config_most_recent, &audio_frame2,
 			 				obs_source, &obs_audio_frame);
 			
 			ndiLib->framesync_free_audio(s->ndi_fsync,
-						     &audio_frame3);
+						     &audio_frame2);
 
 		}
 	}
