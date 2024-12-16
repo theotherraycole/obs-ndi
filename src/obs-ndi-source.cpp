@@ -958,7 +958,7 @@ void *ndi_source_thread(void *data)
 				
 			iFrameNum ++;
 			if (iFrameNum >= MAX_NDI_FRAMES)
-				oFrameNum = 0;
+				iFrameNum = 0;
 			os_atomic_store_long(&s->iFrameNum, iFrameNum);
 
 		}
