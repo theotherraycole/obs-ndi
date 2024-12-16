@@ -797,9 +797,7 @@ void *ndi_source_thread(void *data)
 							 NDIlib_frame_format_type_progressive);
 				
 			if (s->videoFrame2[iFrameNum].p_data != NULL)
-				iFrameNum ++;
-			
-			iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
+                   		iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
 			ndiLib->framesync_capture_audio(s->ndi_fsync,
 			   				&audio_frame2,48000,2,
