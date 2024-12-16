@@ -974,9 +974,13 @@ void *ndi_source_thread(void *data)
 			
 		ndiLib->framesync_destroy(ndi_frame_sync);
 		ndi_frame_sync = nullptr;
-		s.ndi_fsync = nullptr;
+		s->ndi_fsync = nullptr;
+					
+		ndiLib->recv_destroy(ndi_receiver);
+		ndi_receiver = nullptr;
+		s->ndi_receiver = nullptr;
 	}
-
+	else
 	if (ndi_receiver) {
 
 		s->pulseFlag = false;
