@@ -941,6 +941,8 @@ void *ndi_source_thread(void *data)
 			
 		} else {
 
+			os_sem_wait(s->syncSem);
+			
 			iFrameNum = os_atomic_load_long(&s->iFrameNum);
 			
 			if (s->videoFrame2[iFrameNum].p_data != NULL)
