@@ -429,11 +429,7 @@ if (oFrameNum <= iFrameNum)
 else
 	Distance = (iFrameNum + MAX_NDI_FRAMES) - oFrameNum;
 
-if (s->capType == 'f')
-{
-    os_sem_post(s->syncSem);	
-    //Distance = NSYNC_NDI_FRAMES;
-};
+os_sem_post(s->syncSem);	
 	
 if (Distance > NSYNC_NDI_FRAMES)
 	s->iHighCnt ++;
@@ -466,9 +462,6 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 
 	if (Distance < s->iLowBacklog || s->iLowBacklog == 0)
 	{
-		//blog(LOG_INFO,
-	     	//    "[obs-ndi] ndi_source_thread: Low backlog of %d",
-		//    Distance);
 		s->iLowBacklog = Distance;
 		s->iLowCnt ++;
 	}
@@ -495,8 +488,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		}
 	}
 
-	if ((Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60) ||  // don't be too aggressive when dropping
-	    (Distance > (NSYNC_NDI_FRAMES + 2)))                  // but don't be stupid about it, either...
+	if (Distance > NSYNC_NDI_FRAMES && s->iHighCnt > 60)      // don't be too aggressive when dropping
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
@@ -913,9 +905,7 @@ void *ndi_source_thread(void *data)
 		s->runState = 'c'; // capturing
 	
 		if (!config_most_recent.framesync_enabled) {
-
-			//os_sem_wait(s->syncSem);
-			
+		
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
 								 &video_frame2,
 								 &audio_frame3,
@@ -966,7 +956,7 @@ void *ndi_source_thread(void *data)
 			      		(int) iFrameNum);
 				continue;
 			}
-							
+
 			ndiLib->framesync_capture_video(s->ndi_fsync,
 			   				 &(s->videoFrame2[iFrameNum]),
 							 NDIlib_frame_format_type_progressive);
@@ -976,6 +966,16 @@ void *ndi_source_thread(void *data)
 			if (iFrameNum >= MAX_NDI_FRAMES)
 				iFrameNum = 0;
 			os_atomic_store_long(&s->iFrameNum, iFrameNum);
+
+			ndiLib->framesync_capture_audio(s->ndi_fsync,
+			   				*audio_frame3,48000,2,
+							48000 / (1.0 / s->pulse),
+					
+			ndi_source_thread_process_audio3(&config_most_recent, &audio_frame3,
+			 				obs_source, &obs_audio_frame);
+			
+			ndiLib->framesync_free_audio(s->ndi_fsync,
+						     &audio_frame3);
 
 		}
 	}
