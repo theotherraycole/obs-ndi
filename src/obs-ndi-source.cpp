@@ -972,7 +972,7 @@ void *ndi_source_thread(void *data)
 			   				 &(s->videoFrame2[iFrameNum]),
 							 NDIlib_frame_format_type_progressive);
 				
-			if (s->videoFrame2[iFrameNum] != NULL)
+			if (s->videoFrame2[iFrameNum].p_data != NULL)
 				iFrameNum ++;
 			if (iFrameNum >= MAX_NDI_FRAMES)
 				iFrameNum = 0;
