@@ -106,7 +106,7 @@ typedef struct {
         char    capType;
 
 	NDIlib_recv_instance_t ndi_receiver;
-	NDIlib_frame_sync_t ndi_fsync;
+	NDIlib_framesync_instance_t ndi_fsync;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
         os_sem_t *syncSem;
 	long oFrameNum;
@@ -529,7 +529,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		(&s->config, &(s->videoFrame2[oFrameNum]),
 		 s->obs_source, &obs_video_frame);
 
-	if (s->recType == 'f')
+	if (s->capType == 'f')
 
 		ndiLib->framesync_free_video(s->ndi_fsync,
   				   	     &(s->videoFrame2[oFrameNum]));
