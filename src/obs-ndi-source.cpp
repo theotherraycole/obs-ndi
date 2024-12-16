@@ -474,7 +474,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	else
 		s->iLowCnt = 0;
 
-	if (s->iLowCnt > 4)
+	if (s->iLowCnt > 4 && s->capType != 'f')
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
