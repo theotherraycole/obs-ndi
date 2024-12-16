@@ -782,6 +782,8 @@ void *ndi_source_thread(void *data)
 #endif
 			ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
 			s->ndi_receiver = ndi_receiver;
+			s->oFrameNum = 0;
+			s->iFrameNum = 1;
 #if 1
 			blog(LOG_INFO,
 			     "[obs-ndi] ndi_source_thread: '%s' -ndi_receiver = ndiLib->recv_create_v3(&recv_desc)",
@@ -970,7 +972,8 @@ void *ndi_source_thread(void *data)
 			   				 &(s->videoFrame2[iFrameNum]),
 							 NDIlib_frame_format_type_progressive);
 				
-			iFrameNum ++;
+			if (s->videoFrame2[iFrameNum] != NULL)
+				iFrameNum ++;
 			if (iFrameNum >= MAX_NDI_FRAMES)
 				iFrameNum = 0;
 			os_atomic_store_long(&s->iFrameNum, iFrameNum);
