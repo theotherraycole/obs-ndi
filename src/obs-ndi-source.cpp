@@ -636,7 +636,7 @@ void *ndi_source_thread(void *data)
 				ndi_receiver = nullptr;
 				s->ndi_receiver = nullptr;
 			}
-f
+
 			ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
 			s->ndi_receiver = ndi_receiver;
 			iFrameNum = 0;
