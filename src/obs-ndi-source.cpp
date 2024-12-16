@@ -437,11 +437,7 @@ if (s->capType == 'f')
 if (Distance > NSYNC_NDI_FRAMES)
 	s->iHighCnt ++;
 else
-	s->iHighCnt = 0;
-
-blog(LOG_INFO,
-     "[obs-ndi] ndi_source_tick: Distance %d",
-     (int) Distance);     
+	s->iHighCnt = 0;  
 
 if (s->videoFrame2[oFrameNum].p_data != NULL)
 	s->frameCnt ++;
@@ -787,7 +783,7 @@ void *ndi_source_thread(void *data)
 			ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
 			s->ndi_receiver = ndi_receiver;
 			s->oFrameNum = 0;
-			s->iFrameNum = 1;
+			s->iFrameNum = 0;
 #if 1
 			blog(LOG_INFO,
 			     "[obs-ndi] ndi_source_thread: '%s' -ndi_receiver = ndiLib->recv_create_v3(&recv_desc)",
