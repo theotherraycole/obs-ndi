@@ -106,7 +106,7 @@ typedef struct {
         char    capType;
 
 	NDIlib_recv_instance_t ndi_receiver;
-	NDIlib->frame_sync_t nfi_fsync;
+	NDIlib_frame_sync_t ndi_fsync;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
         os_sem_t *syncSem;
 	long oFrameNum;
