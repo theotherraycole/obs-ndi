@@ -431,7 +431,7 @@ else
 if (s->capType == 'f')
 {
     os_sem_post(s->syncSem);	
-    Distance = NSYNC_NDI_FRAMES;
+    //Distance = NSYNC_NDI_FRAMES;
 };
 	
 if (Distance > NSYNC_NDI_FRAMES)
