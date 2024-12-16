@@ -104,6 +104,7 @@ typedef struct {
 	int64_t frameCnt;
 	char	runState;
         char    capType;
+	char    locked;
 
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_framesync_instance_t ndi_fsync;
@@ -527,11 +528,6 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		}
 	}
 
-	blog(LOG_INFO,
-	     	"[obs-ndi] ndi_source_tick: '%s' output frame %d",
-		obs_source_ndi_receiver_name,
-		oFrameNum);
-	
 	ndi_source_thread_process_video2
 		(&s->config, &(s->videoFrame2[oFrameNum]),
 		 s->obs_source, &obs_video_frame);
@@ -749,6 +745,14 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name);
 
 			if (ndi_frame_sync) {
+				int iCnt = 0;
+				while (iCnt < MAX_NDI_FRAMES)
+				{
+					ndiLib->framesync_free_video(s->ndi_fsync,
+			   					     &(s->videoFrame2[iCnt]));
+					s->videoFrame2[iCnt].p_data = NULL;
+					iCnt ++;
+				}
 				ndiLib->framesync_destroy(ndi_frame_sync);
 				ndi_frame_sync = nullptr;
 				s->ndi_fsync = nullptr;
@@ -962,11 +966,6 @@ void *ndi_source_thread(void *data)
 			      		(int) iFrameNum);
 				continue;
 			}
-
-			blog(LOG_INFO,
-	     		     "[obs-ndi] ndi_source_tick: '%s' input frame %d",
-			      obs_source_ndi_receiver_name,
-			      (int) iFrameNum);
 							
 			ndiLib->framesync_capture_video(s->ndi_fsync,
 			   				 &(s->videoFrame2[iFrameNum]),
