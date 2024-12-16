@@ -521,7 +521,9 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 							   &(s->videoFrame2[oFrameNum]));
 			s->videoFrame2[oFrameNum].p_data = NULL;
 			Distance --;
-			oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
+			oFrameNum ++;
+			if (oFrameNum >= MAX_NDI_FRAMES)
+				oFrameNum = 0;
 		}
 	}
 	
@@ -540,8 +542,9 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 
 	s->videoFrame2[oFrameNum].p_data = NULL;
 
-	oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
-
+	oFrameNum ++;
+	if (oFrameNum >= MAX_NDI_FRAMES)
+		oFrameNum = 0;
 	os_atomic_store_long(&s->oFrameNum, oFrameNum);
 
 }
@@ -953,8 +956,9 @@ void *ndi_source_thread(void *data)
 			   				 &(s->videoFrame2[iFrameNum]),
 							 NDIlib_frame_format_type_progressive);
 				
-			iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
-
+			iFrameNum ++;
+			if (iFrameNum >= MAX_NDI_FRAMES)
+				oFrameNum = 0;
 			os_atomic_store_long(&s->iFrameNum, iFrameNum);
 
 		}
