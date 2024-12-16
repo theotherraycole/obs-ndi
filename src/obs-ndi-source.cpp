@@ -526,6 +526,11 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 				oFrameNum = 0;
 		}
 	}
+
+	blog(LOG_INFO,
+	     	"[obs-ndi] ndi_source_tick: '%s' output frame %d",
+		obs_source_ndi_receiver_name,
+		oFrameNum);
 	
 	ndi_source_thread_process_video2
 		(&s->config, &(s->videoFrame2[oFrameNum]),
@@ -951,6 +956,11 @@ void *ndi_source_thread(void *data)
 			if (s->videoFrame2[iFrameNum].p_data != NULL)
 
 				continue;
+
+			blog(LOG_INFO,
+	     		     "[obs-ndi] ndi_source_tick: '%s' input frame %d",
+			      obs_source_ndi_receiver_name,
+			      iFrameNum);
 							
 			ndiLib->framesync_capture_video(s->ndi_fsync,
 			   				 &(s->videoFrame2[iFrameNum]),
