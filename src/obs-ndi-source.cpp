@@ -947,30 +947,13 @@ void *ndi_source_thread(void *data)
 
 				continue;
 							
-			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
-								 &(s->videoFrame2[iFrameNum]),
-								 nullptr,
-								 nullptr, 
-								 100);
-	
-			if (frame_received == NDIlib_frame_type_video) {
+			ndiLib->framesync_capture_video(s.ndi_fsync,
+			   				 &(s->videoFrame2[iFrameNum]));
 				
-				iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
+			iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
-				os_atomic_store_long(&s->iFrameNum, iFrameNum);
-	
-				continue;
-			};
+			os_atomic_store_long(&s->iFrameNum, iFrameNum);
 
-			if (frame_received == NDIlib_frame_type_status_change) {
-				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) has received a change notification",
-	     				obs_source_ndi_receiver_name);
-			}
-			
-			if (frame_received == NDIlib_frame_type_none) {
-				blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
-	     				obs_source_ndi_receiver_name);
-			}
 		}
 	}
 
