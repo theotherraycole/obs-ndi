@@ -953,14 +953,18 @@ void *ndi_source_thread(void *data)
 			
 			iFrameNum = os_atomic_load_long(&s->iFrameNum);
 			
-			if (s->videoFrame2[iFrameNum].p_data != NULL)
-
+			if (s->videoFrame2[iFrameNum].p_data != NULL) {
+				blog(LOG_INFO,
+	     		     		"[obs-ndi] ndi_source_tick: '%s' input frame %d not ready",
+			      		obs_source_ndi_receiver_name,
+			      		(int) iFrameNum);
 				continue;
+			}
 
 			blog(LOG_INFO,
 	     		     "[obs-ndi] ndi_source_tick: '%s' input frame %d",
 			      obs_source_ndi_receiver_name,
-			      iFrameNum);
+			      (int) iFrameNum);
 							
 			ndiLib->framesync_capture_video(s->ndi_fsync,
 			   				 &(s->videoFrame2[iFrameNum]),
