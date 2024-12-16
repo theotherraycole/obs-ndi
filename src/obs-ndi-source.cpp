@@ -803,7 +803,7 @@ void *ndi_source_thread(void *data)
 
 			ndiLib->framesync_capture_audio(s->ndi_fsync,
 			   				&audio_frame2,48000,2,
-							48000 / (1.0 / s->pulse));
+							(int) (48000 / (1.0 / s->pulse)));
 					
 			ndi_source_thread_process_audio2(&config_most_recent, &audio_frame2,
 			 				obs_source, &obs_audio_frame);
