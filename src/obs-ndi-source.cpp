@@ -948,7 +948,8 @@ void *ndi_source_thread(void *data)
 				continue;
 							
 			ndiLib->framesync_capture_video(s->ndi_fsync,
-			   				 &(s->videoFrame2[iFrameNum]));
+			   				 &(s->videoFrame2[iFrameNum]),
+							 NDIlib_frame_format_type_progressive);
 				
 			iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
