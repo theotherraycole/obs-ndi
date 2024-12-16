@@ -106,6 +106,7 @@ typedef struct {
         char    capType;
 
 	NDIlib_recv_instance_t ndi_receiver;
+	NDIlib->frame_sync_t nfi_fsync;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
         os_sem_t *syncSem;
 	long oFrameNum;
@@ -509,9 +510,15 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		     	     obs_source_ndi_receiver_name,
 			     Distance,
 			     liveStatus);
-		
-			ndiLib->recv_free_video_v2(s->ndi_receiver,
-						   &(s->videoFrame2[oFrameNum]));
+
+			if (s->capType == 'f')
+
+				ndiLib->framesync_free_video(s->ndi_fsync,
+  						   	     &(s->videoFrame2[oFrameNum]));
+				
+			else
+				ndiLib->recv_free_video_v2(s->ndi_receiver,
+							   &(s->videoFrame2[oFrameNum]));
 			s->videoFrame2[oFrameNum].p_data = NULL;
 			Distance --;
 			oFrameNum = (oFrameNum + 1) % MAX_NDI_FRAMES;
@@ -521,9 +528,15 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	ndi_source_thread_process_video2
 		(&s->config, &(s->videoFrame2[oFrameNum]),
 		 s->obs_source, &obs_video_frame);
-				
-	ndiLib->recv_free_video_v2(s->ndi_receiver,
-				   &(s->videoFrame2[oFrameNum]));
+
+	if (s->recType == 'f')
+
+		ndiLib->framesync_free_video(s->ndi_fsync,
+  				   	     &(s->videoFrame2[oFrameNum]));
+	else
+		
+		ndiLib->recv_free_video_v2(s->ndi_receiver,
+					   &(s->videoFrame2[oFrameNum]));
 
 	s->videoFrame2[oFrameNum].p_data = NULL;
 
@@ -730,6 +743,7 @@ void *ndi_source_thread(void *data)
 			if (ndi_frame_sync) {
 				ndiLib->framesync_destroy(ndi_frame_sync);
 				ndi_frame_sync = nullptr;
+				s->ndi_fsync = nullptr;
 			}
 
 			if (ndi_receiver) {
@@ -792,6 +806,8 @@ void *ndi_source_thread(void *data)
 #endif
 				ndi_frame_sync =
 					ndiLib->framesync_create(ndi_receiver);
+
+				s->ndi_fsync = ndi_frame_sync;
 #if 1
 				blog(LOG_INFO,
 				     "[obs-ndi] ndi_source_thread: '%s' -ndi_frame_sync = ndiLib->framesync_create(ndi_receiver); ndi_frame_sync=%p",
@@ -961,8 +977,20 @@ void *ndi_source_thread(void *data)
 	os_inhibit_sleep_destroy(pInhibit);
 
 	if (ndi_frame_sync) {
+		s->pulseFlag = false;
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		int iCnt = 0;
+		while (iCnt < MAX_NDI_FRAMES)
+		{
+			ndiLib->framesync_free_video(s->ndi_fsync,
+		   				     &(s->videoFrame2[iCnt]));
+			s->videoFrame2[iCnt].p_data = NULL;
+			iCnt ++;
+		}
+			
 		ndiLib->framesync_destroy(ndi_frame_sync);
 		ndi_frame_sync = nullptr;
+		s.ndi_fsync = nullptr;
 	}
 
 	if (ndi_receiver) {
