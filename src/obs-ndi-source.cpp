@@ -410,9 +410,17 @@ int	oFrameNum = (int) os_atomic_load_long(&s->oFrameNum);
 if (s->pulse != aSecs)
 {
    s->pulse = aSecs;
+   s->frameCnt = 0;
+   s->locked = 'N';
    blog(LOG_INFO,
         "[obs-ndi] ndi_source_tick: Pulse changed to %f",
         aSecs);        
+}
+else
+{
+	s->frameCnt ++;
+	if (s->frameCnt > 120)
+		s->locked = 'Y';
 };
 	
 if (!s->pulseFlag)
@@ -424,8 +432,6 @@ if (s->videoFrame2[oFrameNum].p_data != NULL)
 {
 	
 	obs_source_frame obs_video_frame = {};
-
-	s->frameCnt ++;
 
 	ndi_source_thread_process_video2
 		(&s->config, &(s->videoFrame2[oFrameNum]),
@@ -599,6 +605,7 @@ void *ndi_source_thread(void *data)
 
 			s->runState = 'R'; // resetting
 			s->frameCnt = 0;   // reset frame counter
+			s->locked = 'N';
 
 			reset_recv_desc = nullptr;
 
@@ -659,6 +666,39 @@ void *ndi_source_thread(void *data)
 				timestamp_audio = 0;
 				timestamp_video = 0;
 
+				// Start with NO frames in buffer before creating framesync.
+				blog(LOG_INFO,
+			     	     "[obs-ndi] ndi_source_thread: '%s' draining queue for framesync",
+			     	     obs_source_ndi_receiver_name);
+				
+				while (s->running) {
+
+					frame_received = ndiLib->recv_capture_v3
+								(ndi_receiver,
+								 &video_frame2,
+								 &audio_frame3,
+								 nullptr,
+								 0);	
+					
+					if (frame_received == NDIlib_frame_type_video) {
+				
+						ndiLib->recv_free_video_v2(ndi_receiver,
+									   &video_frame2);
+	
+					}
+
+					else if (frame_received == NDIlib_frame_type_audio) {
+
+						ndiLib->recv_free_audio_v3(ndi_receiver,
+									   &audio_frame3);
+					}
+
+					else if (s->locked == 'Y')
+
+						break;
+					
+				}			
+				
 				s->pulseFlag = true;
 			        s->capType = 'f';
 
@@ -666,6 +706,10 @@ void *ndi_source_thread(void *data)
 					ndiLib->framesync_create(ndi_receiver);
 
 				s->ndi_fsync = ndi_frame_sync;
+
+				blog(LOG_INFO,
+			     	     "[obs-ndi] ndi_source_thread: '%s' framesync is ready",
+			     	     obs_source_ndi_receiver_name);
 			
 			}
 		}
