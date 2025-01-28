@@ -67,8 +67,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOW 1
 #define PROP_LATENCY_LOWEST 2
 
-#define NSYNC_NDI_FRAMES 1
-#define MAX_NDI_FRAMES (NSYNC_NDI_FRAMES + 3)
+#define MAX_NDI_FRAMES 2
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -696,6 +695,10 @@ void *ndi_source_thread(void *data)
 					else if (s->locked == 'Y')
 
 						break;
+
+					else
+						
+					   std::this_thread::sleep_for(std::chrono::milliseconds(2));
 					
 				}			
 				
@@ -815,7 +818,7 @@ void *ndi_source_thread(void *data)
 			}
 
 			if (frame_received == NDIlib_frame_type_none)
-				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
 			//else {
 			//	blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
