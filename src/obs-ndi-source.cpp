@@ -477,6 +477,7 @@ void *ndi_source_thread(void *data)
 	int64_t timestamp_audio = 0;
 	int64_t timestamp_video = 0;
 	long	iFrameNum = 0;
+	int	iAudioSamples = 1600;
 
 	NDIlib_frame_type_e frame_received = NDIlib_frame_type_none;
 
@@ -838,7 +839,7 @@ void *ndi_source_thread(void *data)
 			      		(int) iFrameNum);
 				continue;
 			}
-
+			
 			ndiLib->framesync_capture_video(s->ndi_fsync,
 			   				 &(s->videoFrame2[iFrameNum]),
 							 NDIlib_frame_format_type_progressive);
@@ -846,9 +847,18 @@ void *ndi_source_thread(void *data)
 			if (s->videoFrame2[iFrameNum].p_data != NULL)
                    		iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
+			iAudioSamples = (int)(48000 / (1.0 / s->pulse));
+
+			// Fix up for 30 and 60 fps pulse...pulse is not accurate enough to nail the calculation
+			if (iAudioSamples > 1598 && iAudioSamples < 1601)
+				iAudioSamples = 1600;
+			else
+			if (iAudioSamples > 3197 && iAudioSamples < 3201)
+				iAudioSamples = 3200;	
+			
 			ndiLib->framesync_capture_audio(s->ndi_fsync,
 			   				&audio_frame2,48000,2,
-							(int) (48000 / (1.0 / s->pulse)));
+							iAudioSamples);
 					
 			ndi_source_thread_process_audio2(&config_most_recent, &audio_frame2,
 			 				obs_source, &obs_audio_frame);
