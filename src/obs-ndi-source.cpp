@@ -463,10 +463,7 @@ void *ndi_source_thread(void *data)
 	NDIlib_recv_create_v3_t recv_desc;
 	recv_desc.allow_video_fields = true;
 
-	NDIlib_recv_instance_t ndi_receiver = nullptr;
-
 	NDIlib_metadata_frame_t metadata_frame;
-	NDIlib_framesync_instance_t ndi_frame_sync = nullptr;
 	NDIlib_audio_frame_v2_t audio_frame2;
 	NDIlib_audio_frame_v3_t audio_frame3;
 	int64_t timestamp_audio = 0;
@@ -480,6 +477,8 @@ void *ndi_source_thread(void *data)
 	s->runState = 'S'; // sleeping
         s->capType = 0;
 	s->pulse = 1;
+	s->ndi_fsync = nullptr;
+	s->ndi_receiver = nullptr;
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
@@ -609,22 +608,19 @@ void *ndi_source_thread(void *data)
 			     "[obs-ndi] ndi_source_thread: '%s' Resetting NDI receiver...",
 			     obs_source_ndi_receiver_name);
 
-			if (ndi_frame_sync) {
-				ndiLib->framesync_destroy(ndi_frame_sync);
-				ndi_frame_sync = nullptr;
+			if (s->ndi_fsync) {
+				ndiLib->framesync_destroy(s->ndi_fsync);
 				s->ndi_fsync = nullptr;
 			}
 
-			if (ndi_receiver) {
-				ndiLib->recv_destroy(ndi_receiver);
-				ndi_receiver = nullptr;
+			if (s->ndi_receiver) {
+				ndiLib->recv_destroy(s->ndi_receiver);
 				s->ndi_receiver = nullptr;
 			}
 
-			ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
-			s->ndi_receiver = ndi_receiver;
+			s->ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
 
-			if (!ndi_receiver) {
+			if (!s->ndi_receiver) {
 				blog(LOG_ERROR,
 				     "[obs-ndi] ndi_source_thread: '%s' Cannot create ndi_receiver for NDI source '%s'",
 				     obs_source_ndi_receiver_name,
@@ -649,7 +645,7 @@ void *ndi_source_thread(void *data)
 				while (s->running) {
 
 					frame_received = ndiLib->recv_capture_v3
-								(ndi_receiver,
+								(s->ndi_receiver,
 								 &s->videoFrame2,
 								 &audio_frame3,
 								 nullptr,
@@ -657,14 +653,14 @@ void *ndi_source_thread(void *data)
 					
 					if (frame_received == NDIlib_frame_type_video) {
 				
-						ndiLib->recv_free_video_v2(ndi_receiver,
+						ndiLib->recv_free_video_v2(s->ndi_receiver,
 									   &s->videoFrame2);
 	
 					}
 
 					else if (frame_received == NDIlib_frame_type_audio) {
 
-						ndiLib->recv_free_audio_v3(ndi_receiver,
+						ndiLib->recv_free_audio_v3(s->ndi_receiver,
 									   &audio_frame3);
 					}
 
@@ -680,10 +676,8 @@ void *ndi_source_thread(void *data)
 				
 			        s->capType = 'f';
 
-				ndi_frame_sync =
-					ndiLib->framesync_create(ndi_receiver);
-
-				s->ndi_fsync = ndi_frame_sync;
+				s->ndi_fsync =
+					ndiLib->framesync_create(s->ndi_receiver);
 
 				s->pulseFlag = true;
 
@@ -710,7 +704,7 @@ void *ndi_source_thread(void *data)
 			     "[obs-ndi] ndi_source_thread: '%s' hw_accel_enabled changed; Sending NDI metadata '%s'",
 			     obs_source_ndi_receiver_name,
 			     hwAccelMetadata.p_data);
-			ndiLib->recv_send_metadata(ndi_receiver,
+			ndiLib->recv_send_metadata(s->ndi_receiver,
 						   &hwAccelMetadata);
 		}
 
@@ -725,7 +719,7 @@ void *ndi_source_thread(void *data)
 			    fabs(config_most_recent.ptz.zoom -
 				 config_last_used.ptz.zoom) > tollerance) {
 				if (ndiLib->recv_ptz_is_supported(
-					    ndi_receiver)) {
+					    s->ndi_receiver)) {
 					config_last_used.ptz =
 						config_most_recent.ptz;
 
@@ -736,11 +730,11 @@ void *ndi_source_thread(void *data)
 					     config_most_recent.ptz.tilt,
 					     config_most_recent.ptz.zoom);
 					ndiLib->recv_ptz_pan_tilt(
-						ndi_receiver,
+						s->ndi_receiver,
 						config_most_recent.ptz.pan,
 						config_most_recent.ptz.tilt);
 					ndiLib->recv_ptz_zoom(
-						ndi_receiver,
+						s->ndi_receiver,
 						config_most_recent.ptz.zoom);
 				}
 			}
@@ -759,7 +753,7 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name,
 			     config_most_recent.tally.on_preview,
 			     config_most_recent.tally.on_program);
-			ndiLib->recv_set_tally(ndi_receiver,
+			ndiLib->recv_set_tally(s->ndi_receiver,
 					       &config_most_recent.tally);
 		}
 
@@ -767,7 +761,7 @@ void *ndi_source_thread(void *data)
 	
 		if (!config_most_recent.framesync_enabled) {
 		
-			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
+			frame_received = ndiLib->recv_capture_v3(s->ndi_receiver,
 								 &s->videoFrame2,
 								 &audio_frame3,
 								 nullptr,
@@ -777,7 +771,7 @@ void *ndi_source_thread(void *data)
 				ndi_source_thread_process_audio3(
 					&config_most_recent, &audio_frame3,
 					obs_source, &obs_audio_frame);
-				ndiLib->recv_free_audio_v3(ndi_receiver,
+				ndiLib->recv_free_audio_v3(s->ndi_receiver,
 							   &audio_frame3);
 				continue;
 			}
@@ -788,7 +782,7 @@ void *ndi_source_thread(void *data)
 					&config_most_recent, &s->videoFrame2,
 					obs_source, &obs_video_frame);
 
-				ndiLib->recv_free_video_v2(ndi_receiver,
+				ndiLib->recv_free_video_v2(s->ndi_receiver,
 							   &s->videoFrame2);
 	
 				continue;
@@ -835,21 +829,17 @@ void *ndi_source_thread(void *data)
 	s->pulseFlag = false;
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	
-	if (ndi_frame_sync) {
+	if (s->ndi_fsync) {
 			
-		ndiLib->framesync_destroy(ndi_frame_sync);
-		ndi_frame_sync = nullptr;
+		ndiLib->framesync_destroy(s->ndi_fsync);
 		s->ndi_fsync = nullptr;
 					
-		ndiLib->recv_destroy(ndi_receiver);
-		ndi_receiver = nullptr;
-		s->ndi_receiver = nullptr;
 	}
-	else
-	if (ndi_receiver) {
+	
+	if (s->ndi_receiver) {
 		
 		ndiLib->recv_destroy(ndi_receiver);
-		ndi_receiver = nullptr;
+		s->ndi_receiver = nullptr;
 	}
 
 	blog(LOG_INFO, "[obs-ndi] -ndi_source_thread('%s'...)",
