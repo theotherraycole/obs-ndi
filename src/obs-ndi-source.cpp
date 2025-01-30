@@ -838,7 +838,7 @@ void *ndi_source_thread(void *data)
 	
 	if (s->ndi_receiver) {
 		
-		ndiLib->recv_destroy(ndi_receiver);
+		ndiLib->recv_destroy(s->ndi_receiver);
 		s->ndi_receiver = nullptr;
 	}
 
