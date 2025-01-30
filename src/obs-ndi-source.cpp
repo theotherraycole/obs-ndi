@@ -847,8 +847,8 @@ void *ndi_source_thread(void *data)
                    		iFrameNum = (iFrameNum + 1) % MAX_NDI_FRAMES;
 
 			ndiLib->framesync_capture_audio(s->ndi_fsync,
-			   				&audio_frame2,48000,2,
-							(int) (48000.0 * 4.0 * 2.0 * s->pulse));
+			   				&audio_frame2,0,0,
+							48000);
 					
 			ndi_source_thread_process_audio2(&config_most_recent, &audio_frame2,
 			 				obs_source, &obs_audio_frame);
