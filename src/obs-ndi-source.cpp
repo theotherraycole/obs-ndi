@@ -426,17 +426,17 @@ ndiLib->framesync_capture_video(s->ndi_fsync,
 			   	&s->videoFrame2,
 				NDIlib_frame_format_type_progressive);
 	
-if (s->.p_data != NULL)
+if (s->videoFrame2.p_data != NULL)
 {
 	
 	obs_source_frame obs_video_frame = {};
 
 	ndi_source_thread_process_video2
-		(&s->config, &s->,
+		(&s->config, &s->videoFrame2,
 		 s->obs_source, &obs_video_frame);
 
 	ndiLib->framesync_free_video(s->ndi_fsync,
-  			   	     &s->);
+  			   	     &s->videoFrame2);
 
 }
 }
