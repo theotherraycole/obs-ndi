@@ -96,12 +96,10 @@ typedef struct {
 	ndi_source_config_t config;
 	bool pulseFlag;
 	bool running;
+        bool locked;
 	pthread_t av_thread;
 	float   pulse;
 	int64_t frameCnt;
-	char	runState;
-        char    capType;
-	char    locked;
 
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_framesync_instance_t ndi_fsync;
@@ -405,7 +403,7 @@ if (s->pulse != aSecs)
 {
    s->pulse = aSecs;
    s->frameCnt = 0;
-   s->locked = 'N';
+   s->locked = false;
    blog(LOG_INFO,
         "[obs-ndi] ndi_source_tick: Pulse changed to %f",
         aSecs);        
@@ -414,7 +412,7 @@ else
 {
 	s->frameCnt ++;
 	if (s->frameCnt > 30)
-		s->locked = 'Y';
+		s->locked = true;
 };
 	
 if (!s->pulseFlag)
@@ -474,26 +472,17 @@ void *ndi_source_thread(void *data)
 
 	NDIlib_recv_create_v3_t *reset_recv_desc = &recv_desc;
 
-	s->runState = 'S'; // sleeping
-        s->capType = 0;
 	s->pulse = 1;
 	s->ndi_fsync = nullptr;
 	s->ndi_receiver = nullptr;
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-
 	os_inhibit_t *pInhibit = os_inhibit_sleep_create("Idle is bad for NDI");
 	os_inhibit_sleep_set_active(pInhibit, true);
 	
-	s->runState = 'I'; // init
-
 	while (s->running) {
 		//
 		// Main NDI receiver loop
 		//
-
-		s->runState = 'C'; // checking
-
 		
 		// semi-atomic not *TOO* heavy snapshot
 		config_most_recent = s->config;
@@ -516,8 +505,6 @@ void *ndi_source_thread(void *data)
 			     recv_desc.p_ndi_recv_name);
 		}
 
-		s->runState = 'n'; // checking name
-		
 		if (config_most_recent.ndi_source_name !=
 		    config_last_used.ndi_source_name) {
 			config_last_used.ndi_source_name =
@@ -531,8 +518,6 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name,
 			     recv_desc.source_to_connect_to.p_ndi_name);
 		}
-
-		s->runState = 'b'; // checkin bw
 
 		if (config_most_recent.bandwidth !=
 		    config_last_used.bandwidth) {
@@ -561,8 +546,6 @@ void *ndi_source_thread(void *data)
 			     "[obs-ndi] ndi_source_thread: '%s' bandwidth changed; Setting recv_desc.bandwidth='%d'",
 			     obs_source_ndi_receiver_name, recv_desc.bandwidth);
 		}
-
-		s->runState = 'l'; // checking latency
 		
 		if (config_most_recent.latency != config_last_used.latency) {
 			config_last_used.latency = config_most_recent.latency;
@@ -579,9 +562,7 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name,
 			     recv_desc.color_format);
 		}
-		
-		s->runState = 'f'; // checking framesync
-		
+				
 		if (config_most_recent.framesync_enabled !=
 		    config_last_used.framesync_enabled) {
 			config_last_used.framesync_enabled =
@@ -596,9 +577,8 @@ void *ndi_source_thread(void *data)
 		}
 		if (reset_recv_desc) {
 
-			s->runState = 'R'; // resetting
 			s->frameCnt = 0;   // reset frame counter
-			s->locked = 'N';
+			s->locked = false;
 
 			reset_recv_desc = nullptr;
 			s->pulseFlag = false;
@@ -618,6 +598,13 @@ void *ndi_source_thread(void *data)
 				s->ndi_receiver = nullptr;
 			}
 
+			while (s->running && 
+			       config_most_recent.framesync_enabled &&
+			       !s->locked) {
+				
+		   		std::this_thread::sleep_for(std::chrono::milliseconds(10));			
+			}
+			
 			s->ndi_receiver = ndiLib->recv_create_v3(&recv_desc);
 
 			if (!s->ndi_receiver) {
@@ -628,54 +615,8 @@ void *ndi_source_thread(void *data)
 				break;
 			}
 
-			s->capType = 0;
-		
-                        if (!config_most_recent.framesync_enabled)
-				s->pulseFlag = true;
+                        if (config_most_recent.framesync_enabled) {
 			
-			if (config_most_recent.framesync_enabled) {
-				timestamp_audio = 0;
-				timestamp_video = 0;
-
-				// Start with NO frames in buffer before creating framesync. Might not be necessary.
-				blog(LOG_INFO,
-			     	     "[obs-ndi] ndi_source_thread: '%s' draining queue for framesync",
-			     	     obs_source_ndi_receiver_name);
-				
-				while (s->running) {
-
-					frame_received = ndiLib->recv_capture_v3
-								(s->ndi_receiver,
-								 &s->videoFrame2,
-								 &audio_frame3,
-								 nullptr,
-								 0);	
-					
-					if (frame_received == NDIlib_frame_type_video) {
-				
-						ndiLib->recv_free_video_v2(s->ndi_receiver,
-									   &s->videoFrame2);
-	
-					}
-
-					else if (frame_received == NDIlib_frame_type_audio) {
-
-						ndiLib->recv_free_audio_v3(s->ndi_receiver,
-									   &audio_frame3);
-					}
-
-					else if (s->locked == 'Y')
-
-						break;
-
-					else
-						
-					   std::this_thread::sleep_for(std::chrono::milliseconds(2));
-					
-				}			
-				
-			        s->capType = 'f';
-
 				s->ndi_fsync =
 					ndiLib->framesync_create(s->ndi_receiver);
 
@@ -687,9 +628,7 @@ void *ndi_source_thread(void *data)
 			
 			}
 		}
-		
-		s->runState = 'h'; // checking hw accel
-		
+				
 		if (config_most_recent.hw_accel_enabled !=
 		    config_last_used.hw_accel_enabled) {
 			config_last_used.hw_accel_enabled =
@@ -707,8 +646,6 @@ void *ndi_source_thread(void *data)
 			ndiLib->recv_send_metadata(s->ndi_receiver,
 						   &hwAccelMetadata);
 		}
-
-		s->runState = 'z'; // checking PTZ
 
 		if (config_most_recent.ptz.enabled) {
 			const static float tollerance = 0.001f;
@@ -739,8 +676,6 @@ void *ndi_source_thread(void *data)
 				}
 			}
 		}
-
-		s->runState = 't'; // checking tally
 		
 		if (config_most_recent.tally.on_preview !=
 			    config_last_used.tally.on_preview ||
@@ -756,8 +691,6 @@ void *ndi_source_thread(void *data)
 			ndiLib->recv_set_tally(s->ndi_receiver,
 					       &config_most_recent.tally);
 		}
-
-		s->runState = 'c'; // capturing
 	
 		if (!config_most_recent.framesync_enabled) {
 		
@@ -790,12 +723,6 @@ void *ndi_source_thread(void *data)
 
 			if (frame_received == NDIlib_frame_type_none)
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-			//else {
-			//	blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
-	     		//		obs_source_ndi_receiver_name);
-			//}
-			s->runState = 'f'; // we are freeing
 
 			
 		} else {
