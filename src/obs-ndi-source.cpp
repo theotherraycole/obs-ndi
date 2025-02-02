@@ -464,8 +464,7 @@ void *ndi_source_thread(void *data)
 	NDIlib_metadata_frame_t metadata_frame;
 	NDIlib_audio_frame_v2_t audio_frame2;
 	NDIlib_audio_frame_v3_t audio_frame3;
-	int64_t timestamp_audio = 0;
-	int64_t timestamp_video = 0;
+	
 	int	iAudioSamples = 1600;
 
 	NDIlib_frame_type_e frame_received = NDIlib_frame_type_none;
