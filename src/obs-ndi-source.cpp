@@ -478,7 +478,7 @@ void *ndi_source_thread(void *data)
 	os_inhibit_t *pInhibit = os_inhibit_sleep_create("Idle is bad for NDI");
 	os_inhibit_sleep_set_active(pInhibit, true);
 
-	obs_add_tick_callback(ndi_source_tick, &context);
+	obs_add_tick_callback(ndi_source_tick, s);
 	
 	while (s->running) {
 		//
@@ -752,7 +752,7 @@ void *ndi_source_thread(void *data)
 		}
 	}
 
-	obs_remove_tick_callback(ndi_source_tick, &context);
+	obs_remove_tick_callback(ndi_source_tick, s);
 
 	os_inhibit_sleep_destroy(pInhibit);
 	
