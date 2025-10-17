@@ -477,6 +477,8 @@ void *ndi_source_thread(void *data)
 
 	os_inhibit_t *pInhibit = os_inhibit_sleep_create("Idle is bad for NDI");
 	os_inhibit_sleep_set_active(pInhibit, true);
+
+	obs_add_tick_callback(ndi_source_tick, &context);
 	
 	while (s->running) {
 		//
@@ -749,6 +751,8 @@ void *ndi_source_thread(void *data)
 
 		}
 	}
+
+	obs_remove_tick_callback(ndi_source_tick, &context);
 
 	os_inhibit_sleep_destroy(pInhibit);
 	
@@ -1126,7 +1130,7 @@ obs_source_info create_ndi_source_info()
 	ndi_source_info.hide = ndi_source_hidden;
 	ndi_source_info.deactivate = ndi_source_deactivated;
 	ndi_source_info.destroy = ndi_source_destroy;
-        ndi_source_info.video_tick = ndi_source_tick; 
+    //    ndi_source_info.video_tick = ndi_source_tick; 
 
 
 	return ndi_source_info;
