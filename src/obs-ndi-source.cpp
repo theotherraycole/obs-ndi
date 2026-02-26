@@ -611,7 +611,7 @@ void *ndi_source_thread(void *data)
 				break;
 			}
 
-                        if (config_most_recent.framesync_enabled) {
+            if (config_most_recent.framesync_enabled) {
 			
 				s->ndi_fsync =
 					ndiLib->framesync_create(s->ndi_receiver);
@@ -770,7 +770,7 @@ void *ndi_source_thread(void *data)
 	os_inhibit_sleep_destroy(pInhibit);
 	
 	s->pulseFlag = false;
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	
 	if (s->ndi_fsync) {
 			
