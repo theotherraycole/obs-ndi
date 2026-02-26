@@ -104,7 +104,8 @@ typedef struct {
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_framesync_instance_t ndi_fsync;
 	NDIlib_video_frame_v2_t videoFrame2;
-        os_sem_t *syncSem;
+    os_sem_t *syncSem;
+    os_sem_t *syncSem2;
 } ndi_source_t;
 
 static obs_source_t *find_filter_by_id(obs_source_t *context, const char *id)
@@ -419,6 +420,17 @@ if (!s->pulseFlag)
 	return;
 
 os_sem_post(s->syncSem);	
+	
+}
+
+void ndi_source_tick2(void *data, float aSecs)
+{
+
+auto s = (ndi_source_t *)data;
+
+if (s->locked && s->running)
+   os_sem_wait(s->syncSem2);	
+	
 }
 
 void *ndi_source_thread(void *data)
@@ -728,6 +740,8 @@ void *ndi_source_thread(void *data)
   			   	     &s->videoFrame2);
 			}
 
+			os_sem_wait(s->syncSem2);
+
 			iAudioSamples = (int)(48000 / (1.0 / s->pulse));
 
 			// Fix up for 30 and 60 fps pulse...pulse is not accurate enough to nail the calculation
@@ -927,6 +941,7 @@ void ndi_source_thread_start(ndi_source_t *s)
 	pthread_attr_t threadAttr;
 	struct sched_param threadSched;
 	os_sem_init(&s->syncSem, 0);
+	os_sem_init(&s->syncSem2, 0);
 
 	pthread_attr_init(&threadAttr);
 	threadSched.sched_priority = sched_get_priority_max(SCHED_OTHER);
@@ -946,8 +961,11 @@ void ndi_source_thread_stop(ndi_source_t *s)
 	if (s->running) {
 		s->running = false;
 		os_sem_post(s->syncSem);
+		os_sem_post(s->syncSem2);
 		pthread_join(s->av_thread, NULL);
 		os_sem_destroy(s->syncSem);
+		os_sem_destroy(s->syncSem2);
+
 	}
 }
 
@@ -1128,7 +1146,7 @@ obs_source_info create_ndi_source_info()
 	ndi_source_info.hide = ndi_source_hidden;
 	ndi_source_info.deactivate = ndi_source_deactivated;
 	ndi_source_info.destroy = ndi_source_destroy;
-    //    ndi_source_info.video_tick = ndi_source_tick; 
+    ndi_source_info.video_tick = ndi_source_tick2; 
 
 
 	return ndi_source_info;
