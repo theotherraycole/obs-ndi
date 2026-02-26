@@ -427,7 +427,8 @@ void ndi_source_tick2(void *data, float aSecs)
 {
 
 auto s = (ndi_source_t *)data;
-
+if (!s->pulseFlag)
+	return;
 if (s->locked && s->running)
    os_sem_wait(s->syncSem2);	
 	
@@ -740,7 +741,7 @@ void *ndi_source_thread(void *data)
   			   	     &s->videoFrame2);
 			}
 
-			os_sem_wait(s->syncSem2);
+			os_sem_post(s->syncSem2);
 
 			iAudioSamples = (int)(48000 / (1.0 / s->pulse));
 
