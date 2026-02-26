@@ -419,24 +419,6 @@ if (!s->pulseFlag)
 	return;
 
 os_sem_post(s->syncSem);	
-
-ndiLib->framesync_capture_video(s->ndi_fsync,
-			   	&s->videoFrame2,
-				NDIlib_frame_format_type_progressive);
-	
-if (s->videoFrame2.p_data != NULL)
-{
-	
-	obs_source_frame obs_video_frame = {};
-
-	ndi_source_thread_process_video2
-		(&s->config, &s->videoFrame2,
-		 s->obs_source, &obs_video_frame);
-
-	ndiLib->framesync_free_video(s->ndi_fsync,
-  			   	     &s->videoFrame2);
-
-}
 }
 
 void *ndi_source_thread(void *data)
@@ -706,7 +688,7 @@ void *ndi_source_thread(void *data)
 					&config_most_recent, &audio_frame3,
 					obs_source, &obs_audio_frame);
 				ndiLib->recv_free_audio_v3(s->ndi_receiver,
-							   &audio_frame3);
+							   			   &audio_frame3);
 				continue;
 			}
 
@@ -717,7 +699,7 @@ void *ndi_source_thread(void *data)
 					obs_source, &obs_video_frame);
 
 				ndiLib->recv_free_video_v2(s->ndi_receiver,
-							   &s->videoFrame2);
+							   			   &s->videoFrame2);
 	
 				continue;
 			}
@@ -729,6 +711,22 @@ void *ndi_source_thread(void *data)
 		} else {
 
 			os_sem_wait(s->syncSem);
+
+			ndiLib->framesync_capture_video
+				(s->ndi_fsync,
+			 	 &s->videoFrame2,
+				 NDIlib_frame_format_type_progressive);
+	
+			if (s->videoFrame2.p_data != NULL)
+			{
+				ndi_source_thread_process_video2
+					(&s->config, &s->videoFrame2,
+					 s->obs_source, &obs_video_frame);
+
+				ndiLib->framesync_free_video
+					(s->ndi_fsync,
+  			   	     &s->videoFrame2);
+			}
 
 			iAudioSamples = (int)(48000 / (1.0 / s->pulse));
 
