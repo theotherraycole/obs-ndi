@@ -741,7 +741,7 @@ void *ndi_source_thread(void *data)
   			   	     &s->videoFrame2);
 			}
 
-			os_sem_post(s->syncSem2);
+//			os_sem_post(s->syncSem2);
 
 			iAudioSamples = (int)(48000 / (1.0 / s->pulse));
 
@@ -1147,7 +1147,7 @@ obs_source_info create_ndi_source_info()
 	ndi_source_info.hide = ndi_source_hidden;
 	ndi_source_info.deactivate = ndi_source_deactivated;
 	ndi_source_info.destroy = ndi_source_destroy;
-    ndi_source_info.video_tick = ndi_source_tick2; 
+//    ndi_source_info.video_tick = ndi_source_tick2; 
 
 
 	return ndi_source_info;
