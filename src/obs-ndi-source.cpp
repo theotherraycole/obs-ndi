@@ -527,10 +527,10 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		}
 	}
 
-	blog(LOG_INFO,
-	     	"[obs-ndi] ndi_source_tick: '%s' output frame %d",
-		obs_source_ndi_receiver_name,
-		oFrameNum);
+	//blog(LOG_INFO,
+	//     	"[obs-ndi] ndi_source_tick: '%s' output frame %d",
+	//	obs_source_ndi_receiver_name,
+	//	oFrameNum);
 	
 	ndi_source_thread_process_video2
 		(&s->config, &(s->videoFrame2[oFrameNum]),
@@ -749,6 +749,18 @@ void *ndi_source_thread(void *data)
 			     obs_source_ndi_receiver_name);
 
 			if (ndi_frame_sync) {
+				s->pulseFlag = false;
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				int iCnt = 0;
+				while (iCnt < MAX_NDI_FRAMES)
+				{
+					ndiLib->framesync_free_video(s->ndi_fsync,
+				   				   &(s->videoFrame2[iCnt]));
+
+					s->videoFrame2[iCnt].p_data = NULL;
+					iCnt ++;
+				}
+				
 				ndiLib->framesync_destroy(ndi_frame_sync);
 				ndi_frame_sync = nullptr;
 				s->ndi_fsync = nullptr;
@@ -775,6 +787,11 @@ void *ndi_source_thread(void *data)
 				ndi_receiver = nullptr;
 				s->ndi_receiver = nullptr;
 			}
+
+			os_atomic_store_long(&s->iFrameNum, 0);
+			os_atomic_store_long(&s->oFrameNum, 0);
+
+
 #if 1
 			blog(LOG_INFO,
 			     "[obs-ndi] ndi_source_thread: '%s' +ndi_receiver = ndiLib->recv_create_v3(&recv_desc)",
