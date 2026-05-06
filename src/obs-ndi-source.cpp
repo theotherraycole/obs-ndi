@@ -954,7 +954,7 @@ void *ndi_source_thread(void *data)
 								 &(s->videoFrame2[iFrameNum]),
 								 &audio_frame3,
 								 nullptr,
-								 100);
+								 250);
 
 			if (frame_received == NDIlib_frame_type_audio) {
 				ndi_source_thread_process_audio3(
