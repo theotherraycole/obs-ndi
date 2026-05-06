@@ -977,7 +977,7 @@ void *ndi_source_thread(void *data)
 			}
 
 			if (frame_received == NDIlib_frame_type_none)
-				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 			//else {
 			//	blog(LOG_INFO, "[obs-ndi] ndi_source_thread('%s'...) did not receive a video frame",
