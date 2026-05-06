@@ -797,7 +797,7 @@ void *ndi_source_thread(void *data)
 
 			s->capType = 0;
 		
-            if (!config_most_recent.framesync_enabled)
+            //if (!config_most_recent.framesync_enabled)
 				s->pulseFlag = true;
 			
 			if (config_most_recent.framesync_enabled) {
@@ -909,9 +909,19 @@ void *ndi_source_thread(void *data)
 		if (!config_most_recent.framesync_enabled) {
 
 			//os_sem_wait(s->syncSem);
+
+			iFrameNum = os_atomic_load_long(&s->iFrameNum);
+			
+			if (s->videoFrame2[iFrameNum].p_data != NULL) {
+				blog(LOG_INFO,
+	     		     		"[obs-ndi] ndi_source_tick: '%s' input frame %d not ready",
+			      		obs_source_ndi_receiver_name,
+			      		(int) iFrameNum);
+				continue;
+			}
 			
 			frame_received = ndiLib->recv_capture_v3(ndi_receiver,
-								 &video_frame2,
+								 &(s->videoFrame2[iFrameNum]),
 								 &audio_frame3,
 								 nullptr,
 								 100);
@@ -926,13 +936,18 @@ void *ndi_source_thread(void *data)
 			}
 
 			if (frame_received == NDIlib_frame_type_video) {
-				
-				ndi_source_thread_process_video2(
-					&config_most_recent, &video_frame2,
-					obs_source, &obs_video_frame);
 
-				ndiLib->recv_free_video_v2(ndi_receiver,
-							   &video_frame2);
+				iFrameNum ++;
+				if (iFrameNum >= MAX_NDI_FRAMES)
+					iFrameNum = 0;
+				os_atomic_store_long(&s->iFrameNum, iFrameNum);
+				
+				//ndi_source_thread_process_video2(
+				//	&config_most_recent, &video_frame2,
+				//	obs_source, &obs_video_frame);
+
+				//ndiLib->recv_free_video_v2(ndi_receiver,
+				//			   &video_frame2);
 	
 				continue;
 			}
