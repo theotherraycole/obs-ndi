@@ -444,6 +444,7 @@ if (s->videoFrame2[oFrameNum].p_data != NULL)
 
 if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
 {
+	auto obs_source = s->obs_source;
 	QByteArray obs_source_ndi_receiver_name_utf8 =
 	QString(obs_source_get_name(obs_source)).toUtf8();
 	const char *obs_source_ndi_receiver_name = 
