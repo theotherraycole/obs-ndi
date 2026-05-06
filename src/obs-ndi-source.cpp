@@ -961,10 +961,10 @@ void *ndi_source_thread(void *data)
 				continue;
 			}
 
-			blog(LOG_INFO,
-	     		     "[obs-ndi] ndi_source_tick: '%s' input frame %d",
-			      obs_source_ndi_receiver_name,
-			      (int) iFrameNum);
+			//blog(LOG_INFO,
+	     	//	     "[obs-ndi] ndi_source_tick: '%s' input frame %d",
+			//      obs_source_ndi_receiver_name,
+			//      (int) iFrameNum);
 							
 			ndiLib->framesync_capture_video(s->ndi_fsync,
 			   				 &(s->videoFrame2[iFrameNum]),
