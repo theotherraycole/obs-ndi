@@ -482,7 +482,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	else
 		s->iLowCnt = 0;
 
-	if (s->iLowCnt > 4 && s->capType != 'f')
+	if (s->iLowCnt > 60 && s->capType != 'f')
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
@@ -511,7 +511,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		obs_source_ndi_receiver_name =
 			obs_source_ndi_receiver_name_utf8.constData();
 		
-		while (Distance > NSYNC_NDI_FRAMES)
+		if (Distance > NSYNC_NDI_FRAMES)
 		{
 			blog(LOG_INFO,
 	     	     	     "[obs-ndi] ndi_source_tick: '%s' is ahead...%d - Dropping frame %s",
