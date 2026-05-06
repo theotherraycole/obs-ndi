@@ -103,15 +103,15 @@ typedef struct {
 	float   pulse;
 	int64_t frameCnt;
 	char	runState;
-        char    capType;
+    char    capType;
 
 	NDIlib_recv_instance_t ndi_receiver;
 	NDIlib_framesync_instance_t ndi_fsync;
 	NDIlib_video_frame_v2_t videoFrame2[MAX_NDI_FRAMES];
-        os_sem_t *syncSem;
+    os_sem_t *syncSem;
 	long oFrameNum;
 	long iFrameNum;
-        int iLowBacklog;
+    int iLowBacklog;
 	int iHighCnt;
 	int iLowCnt;
 } ndi_source_t;
@@ -450,9 +450,10 @@ if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
 	const char *obs_source_ndi_receiver_name = 
 		obs_source_ndi_receiver_name_utf8.constData();
 	blog(LOG_INFO,
-	     "[obs-ndi] ndi_source_tick: '%s' Backlog %d, HighCnt %d",
+	     "[obs-ndi] ndi_source_tick: '%s' Current Backlog %d, Low Backlog %d HighCnt %d",
 		 obs_source_ndi_receiver_name,
 	     (int) Distance,
+		 (int) s->iLowBacklog,
 	     (int) s->iHighCnt);
 }
 
@@ -470,11 +471,15 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		//blog(LOG_INFO,
 	     	//    "[obs-ndi] ndi_source_thread: Low backlog of %d",
 		//    Distance);
-		s->iLowBacklog = Distance;
+		if (Distance < s->iLowBacklog)
+		   s->iLowBacklog = Distance;
 		s->iLowCnt ++;
 	}
 	else
+	{
 		s->iLowCnt = 0;
+		s->iLowBacklog = Distance;
+	}
 
 	if (s->config.tally.on_program)		// are we live?
 	{
