@@ -446,7 +446,7 @@ if ((s->frameCnt % (60 * 30)) == 0 && s->frameCnt > 0)
 {
 	QByteArray obs_source_ndi_receiver_name_utf8 =
 	QString(obs_source_get_name(obs_source)).toUtf8();
-	obs_source_ndi_receiver_name =
+	const char *obs_source_ndi_receiver_name = 
 		obs_source_ndi_receiver_name_utf8.constData();
 	blog(LOG_INFO,
 	     "[obs-ndi] ndi_source_tick: '%s' Backlog %d, HighCnt %d",
