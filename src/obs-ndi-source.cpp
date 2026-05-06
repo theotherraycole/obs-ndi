@@ -471,7 +471,8 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		liveStatus = " - LIVE!";
 	};
 
-	if (Distance < s->iLowBacklog || s->iLowBacklog == 0)
+	//if (Distance < s->iLowBacklog || s->iLowBacklog == 0)
+	if (Distance < NSYNC_NDI_FRAMES)
 	{
 		//blog(LOG_INFO,
 	     	//    "[obs-ndi] ndi_source_thread: Low backlog of %d",
