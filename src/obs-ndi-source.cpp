@@ -68,7 +68,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #define PROP_LATENCY_LOWEST 2
 
 #define NSYNC_NDI_FRAMES 5
-#define MAX_NDI_FRAMES (NSYNC_NDI_FRAMES + 3)
+#define MAX_NDI_FRAMES (NSYNC_NDI_FRAMES * 2)
 
 extern NDIlib_find_instance_t ndi_finder;
 
@@ -943,6 +943,8 @@ void *ndi_source_thread(void *data)
 	     		     		"[obs-ndi] ndi_source_tick: '%s' input frame %d not ready",
 			      		obs_source_ndi_receiver_name,
 			      		(int) iFrameNum);
+			 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 				continue;
 			}
 			
@@ -999,6 +1001,8 @@ void *ndi_source_thread(void *data)
 	     		     		"[obs-ndi] ndi_source_tick: '%s' input frame %d not ready",
 			      		obs_source_ndi_receiver_name,
 			      		(int) iFrameNum);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 				continue;
 			}
 
