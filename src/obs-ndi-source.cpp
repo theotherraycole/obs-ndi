@@ -491,7 +491,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		obs_source_ndi_receiver_name =
 			obs_source_ndi_receiver_name_utf8.constData();
 		
-		while (Distance > NSYNC_NDI_FRAMES)
+		if (Distance < NSYNC_NDI_FRAMES)
 		{
 			blog(LOG_INFO,
 	     	     	     "[obs-ndi] ndi_source_tick: '%s' is behind...%d - Duplicating frame %s",
