@@ -482,7 +482,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		liveStatus = " - LIVE!";
 	};
 
-	if (s->iLowCnt > 300 && s->capType != 'f')
+	if (s->iLowCnt > 900 && s->capType != 'f')
 	{
 		auto obs_source = s->obs_source;
 		QByteArray obs_source_ndi_receiver_name_utf8 =
@@ -497,6 +497,8 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 		     	     obs_source_ndi_receiver_name,
 			     Distance,
 			     liveStatus);
+
+			s->iLowCnt = 0;
 		
 			return;
 		}
@@ -530,6 +532,7 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 			s->videoFrame2[oFrameNum].p_data = NULL;
 			Distance --;
 			oFrameNum ++;
+			s->iHighCnt = 0;
 			if (oFrameNum >= MAX_NDI_FRAMES)
 				oFrameNum = 0;
 		}
