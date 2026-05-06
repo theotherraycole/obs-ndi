@@ -465,13 +465,6 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	const char *obs_source_ndi_receiver_name = "";
 	const char *liveStatus = " - NOT live";
 
-	if (s->config.tally.on_program)		// are we live?
-	{
-		Distance --;			// give it some slack...
-		liveStatus = " - LIVE!";
-	};
-
-	//if (Distance < s->iLowBacklog || s->iLowBacklog == 0)
 	if (Distance < NSYNC_NDI_FRAMES)
 	{
 		//blog(LOG_INFO,
@@ -482,6 +475,12 @@ if ((s->frameCnt > NSYNC_NDI_FRAMES || Distance >= NSYNC_NDI_FRAMES) && s->video
 	}
 	else
 		s->iLowCnt = 0;
+
+	if (s->config.tally.on_program)		// are we live?
+	{
+		Distance --;			// give it some slack...
+		liveStatus = " - LIVE!";
+	};
 
 	if (s->iLowCnt > 300 && s->capType != 'f')
 	{
